@@ -1,0 +1,1045 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<meta name="color-scheme" content="dark">
+<meta name="theme-color" content="#131F24">
+<meta name="format-detection" content="telephone=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Select Streak">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+<link rel="icon" type="image/png" sizes="192x192" href="icons/icon-192.png">
+<link rel="manifest" href="manifest.webmanifest">
+<title>Select Streak</title>
+<style>
+@font-face{font-family:'Nunito';font-weight:600;font-style:normal;font-display:swap;src:url(fonts/nunito-latin-600-normal.woff2) format('woff2')}
+@font-face{font-family:'Nunito';font-weight:700;font-style:normal;font-display:swap;src:url(fonts/nunito-latin-700-normal.woff2) format('woff2')}
+@font-face{font-family:'Nunito';font-weight:800;font-style:normal;font-display:swap;src:url(fonts/nunito-latin-800-normal.woff2) format('woff2')}
+@font-face{font-family:'Nunito';font-weight:900;font-style:normal;font-display:swap;src:url(fonts/nunito-latin-900-normal.woff2) format('woff2')}
+@font-face{font-family:'Fira Code';font-weight:400;font-style:normal;font-display:swap;src:url(fonts/fira-code-latin-400-normal.woff2) format('woff2')}
+@font-face{font-family:'Fira Code';font-weight:500;font-style:normal;font-display:swap;src:url(fonts/fira-code-latin-500-normal.woff2) format('woff2')}
+@font-face{font-family:'Fira Code';font-weight:600;font-style:normal;font-display:swap;src:url(fonts/fira-code-latin-600-normal.woff2) format('woff2')}
+@font-face{font-family:'Fira Code';font-weight:700;font-style:normal;font-display:swap;src:url(fonts/fira-code-latin-700-normal.woff2) format('woff2')}
+
+/* Layout: one dark screen — stat bar + winding path at home; lesson player with progress header, mascot prompt, code card, 3D option grid and a coloured action footer. */
+:root{
+  /* Vibrant palette (user supplied) */
+  --color-brand-green:#58CC02; --color-brand-green-dark:#46A302;
+  --color-brand-blue:#1CB0F6; --color-brand-blue-dark:#0F85D0;
+  --color-brand-yellow:#FFC800; --color-brand-yellow-dark:#D7A700;
+  --color-brand-orange:#FF9600; --color-brand-red:#FF4B4B; --color-brand-red-dark:#EA2B2B;
+  --color-brand-purple:#CE82FF;
+  /* Neutrals */
+  --bg-app:#131F24; --bg-card:#202F36; --bg-card-hover:#283841; --bg-code:#182228;
+  --border-subtle:#37464F; --border-shadow:#2A3A42;
+  --text-main:#F7F7F7; --text-muted:#52656D; --text-soft:#A9BAC2;
+  --bg-good:#052C14; --bg-bad:#2C0B0E; --good-text:#BBF7D0; --bad-text:#FECACA;
+  /* Typography */
+  --font-heading:'Nunito','DIN Round',system-ui,sans-serif;
+  --font-code:'Fira Code','JetBrains Mono',ui-monospace,Consolas,monospace;
+  --r:16px; --bg-outer:#0B1418;
+  color-scheme:dark;
+}
+*{box-sizing:border-box}
+html,body{height:100%}
+html,body{overscroll-behavior:none}
+*{-webkit-touch-callout:none}
+textarea{-webkit-touch-callout:default}
+:root{padding-top:env(safe-area-inset-top,0px)}
+body::before{content:"";position:fixed;top:0;left:0;right:0;height:env(safe-area-inset-top,0px);background:var(--bg-app);z-index:15}
+body{-webkit-tap-highlight-color:transparent;background:var(--bg-app);color:var(--text-main);font:600 16px/1.5 var(--font-heading);-webkit-font-smoothing:antialiased}
+button{font:inherit;color:inherit;touch-action:manipulation;-webkit-user-select:none;user-select:none}
+:focus-visible{outline:3px solid var(--color-brand-blue);outline-offset:2px}
+::selection{background:var(--color-brand-blue);color:#fff}
+.wrap{max-width:672px;margin:0 auto;padding-inline:16px;width:100%}
+h1,h2,h3,h4{font-family:var(--font-heading);font-weight:900;text-wrap:balance;margin:0;line-height:1.15}
+code,.mono{font-family:var(--font-code)}
+
+/* app shell: phone-width app, centred on bigger screens */
+#app{max-width:480px;margin:0 auto;min-height:100%;background:var(--bg-app);padding-bottom:calc(84px + env(safe-area-inset-bottom,0px))}
+@media (min-width:520px){ body{background:var(--bg-outer)} #app{border-inline:2px solid var(--border-subtle)} }
+.nav{position:fixed;bottom:0;left:0;right:0;margin:0 auto;max-width:480px;z-index:6;background:var(--bg-app);border-top:2px solid var(--border-subtle);display:flex;gap:6px;padding:8px 10px calc(8px + env(safe-area-inset-bottom,0px))}
+.nb{flex:1;display:flex;flex-direction:column;align-items:center;gap:2px;background:none;border:2px solid transparent;border-radius:14px;padding:6px 4px;font-size:11px;font-weight:900;text-transform:uppercase;letter-spacing:.07em;color:var(--text-soft);cursor:pointer}
+.nb svg,.nb .byte-wrap{width:30px;height:30px}
+.nb .byte{filter:none}
+.nb[aria-selected="true"]{border-color:var(--color-brand-blue);background:rgba(28,176,246,.12);color:var(--color-brand-blue)}
+.flag{font-family:var(--font-code);font-weight:700;font-size:14px;background:var(--bg-card);border:2px solid var(--border-subtle);border-bottom-width:4px;border-radius:10px;padding:2px 9px;color:var(--color-brand-blue)}
+.splash{position:fixed;inset:0;z-index:100;background:var(--color-brand-green);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;color:#fff;transition:opacity .35s}
+.splash h1{font-size:34px;font-weight:900;letter-spacing:-.01em}
+.splash .hero-byte{animation:hop .9s ease .15s}
+.splash.out{opacity:0;pointer-events:none}
+.confetti{position:fixed;inset:0;width:100%;height:100%;pointer-events:none;z-index:50}
+.combo{display:inline-block;margin-left:8px;font-size:12px;font-weight:900;letter-spacing:.06em;text-transform:uppercase;background:var(--color-brand-orange);color:#fff;border-radius:999px;padding:2px 9px;vertical-align:middle;animation:pop .35s ease}
+@keyframes pop{0%{transform:scale(.4)}70%{transform:scale(1.15)}}
+.stat.lose{animation:shake .45s ease}
+/* profile */
+.prof{padding-block:20px 30px;display:flex;flex-direction:column;gap:18px}
+.prof-head{display:flex;flex-direction:column;align-items:center;text-align:center;gap:6px}
+.prof-head h2{font-size:26px} .prof-head p{margin:0;color:var(--text-soft)}
+.statgrid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.sc{background:var(--bg-card);border:2px solid var(--border-subtle);border-radius:var(--r);padding:12px 14px;display:flex;gap:10px;align-items:center;min-width:0}
+.sc svg{width:28px;height:28px;flex:none}
+.sc b{display:block;font-size:22px;font-weight:900;font-variant-numeric:tabular-nums;line-height:1.1}
+.sc small{color:var(--text-soft);font-size:13px}
+.prof h3{font-size:20px;margin-top:6px}
+.settings{background:var(--bg-card);border:2px solid var(--border-subtle);border-radius:var(--r)}
+.set{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:14px 16px;cursor:pointer}
+.set+.set{border-top:2px solid var(--border-subtle)}
+.set small{display:block;color:var(--text-soft);font-size:13px;font-weight:600}
+.sw{appearance:none;-webkit-appearance:none;flex:none;width:52px;height:32px;border-radius:999px;background:var(--border-subtle);position:relative;cursor:pointer;transition:background .2s;margin:0}
+.sw::after{content:"";position:absolute;top:3px;left:3px;width:26px;height:26px;border-radius:50%;background:#fff;transition:transform .2s;box-shadow:0 2px 0 rgba(0,0,0,.25)}
+.sw:checked{background:var(--color-brand-green)}
+.sw:checked::after{transform:translateX(20px)}
+.btn.danger{background:transparent;color:var(--color-brand-red);border:2px solid var(--border-subtle);border-bottom-width:4px}
+.btn.danger.armed{background:var(--color-brand-red);color:#fff;border-color:var(--color-brand-red-dark)}
+/* table data shown inside lessons */
+.data{background:var(--bg-code);border:2px solid var(--border-subtle);border-radius:var(--r);overflow:hidden;min-width:0}
+.dhead{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:8px 10px;border-bottom:2px solid var(--border-subtle);flex-wrap:wrap}
+.dlabel{display:flex;gap:6px;align-items:center;font-size:12px;font-weight:900;letter-spacing:.08em;text-transform:uppercase;color:var(--text-soft)}
+.dlabel svg{width:16px;height:16px}
+.dtabs{display:flex;gap:6px;flex-wrap:wrap}
+.dtab{font-family:var(--font-code);font-size:13px;font-weight:600;border:2px solid var(--border-subtle);background:var(--bg-card);border-radius:10px;padding:3px 9px;cursor:pointer;color:var(--text-soft)}
+.dtab[aria-selected="true"]{border-color:var(--color-brand-blue);color:var(--color-brand-blue)}
+.dscroll{max-height:176px;overflow:auto;overscroll-behavior:contain}
+.data table{border-collapse:collapse;width:100%;font-family:var(--font-code);font-size:13px;font-variant-numeric:tabular-nums}
+.data th,.data td{padding:6px 10px;text-align:left;white-space:nowrap;border-bottom:1px solid var(--border-subtle);color:var(--text-muted)}
+.data th{position:sticky;top:0;background:var(--bg-card);font-weight:600}
+.data th.hot{color:var(--color-brand-blue)} .data td.hot{color:var(--text-main)}
+.data tr:last-child td{border-bottom:0}
+.dmeta{padding:5px 10px;font-size:12px;color:var(--text-soft);border-top:1px solid var(--border-subtle)}
+/* lesson intro, quit sheet, keyword bar */
+.intro-ex{display:flex;flex-direction:column;gap:10px}
+.intro-ex .lbl{font-size:12px;font-weight:900;letter-spacing:.08em;text-transform:uppercase;color:var(--text-soft)}
+.newpill{display:inline-block;background:var(--color-brand-purple);color:#fff;border-radius:999px;padding:2px 10px;font-size:12px;font-weight:900;letter-spacing:.08em;text-transform:uppercase}
+.quit-sheet{position:absolute;inset:0;z-index:5;background:rgba(5,10,12,.6);display:flex;align-items:flex-end}
+.quit-sheet .card{width:100%;background:var(--bg-card);border-top:2px solid var(--border-subtle);border-radius:22px 22px 0 0;padding:22px 16px calc(22px + env(safe-area-inset-bottom,0px));display:flex;flex-direction:column;align-items:center;gap:12px;text-align:center;animation:rise .25s ease}
+.quit-sheet .byte-wrap{width:96px;height:96px}
+.quit-sheet h3{font-size:22px}
+.quit-sheet p{margin:0;color:var(--text-soft)}
+.quit-sheet .btn{width:100%}
+@keyframes rise{from{transform:translateY(40px);opacity:0}}
+.kbar{display:flex;gap:8px;overflow-x:auto;padding-bottom:4px;scrollbar-width:none;-webkit-overflow-scrolling:touch}
+.kbar::-webkit-scrollbar{display:none}
+.kbar button{flex:none;font-family:var(--font-code);font-size:14px;font-weight:600;background:var(--bg-card);border:2px solid var(--border-subtle);border-bottom-width:4px;border-radius:10px;padding:6px 11px;cursor:pointer;color:var(--color-brand-purple)}
+.kbar button.p{color:var(--text-main);min-width:40px}
+.kbar button:active{transform:translateY(2px);border-bottom-width:2px}
+.unit-head .eyebrow b{opacity:.85;font-weight:800}
+.unit-head{flex-wrap:wrap;row-gap:8px}
+.unit-head > div{flex:1 1 170px;min-width:0}
+.section-h{scroll-margin-top:80px;display:flex;align-items:baseline;justify-content:space-between;gap:12px;margin-top:34px;padding-bottom:8px;border-bottom:2px solid var(--border-subtle)}
+.section-h span{font-size:24px;font-weight:900}
+.section-h small{color:var(--text-soft);font-weight:800;font-size:13px;letter-spacing:.04em}
+.section-h + .unit{margin-top:16px}
+/* top bar */
+.bar{position:sticky;top:env(safe-area-inset-top,0px);z-index:5;background:var(--bg-app);border-bottom:2px solid var(--border-subtle)}
+.bar .wrap{display:flex;align-items:center;justify-content:space-between;gap:10px;padding-block:12px}
+.brand{font-weight:900;font-size:21px;margin-right:auto;display:flex;align-items:center;gap:8px;color:var(--color-brand-green)}
+.brand .logo{font-family:var(--font-code);font-size:13px;background:var(--color-brand-green);color:#fff;border-radius:10px;padding:3px 8px;font-weight:700;box-shadow:0 3px 0 var(--color-brand-green-dark)}
+.stat{display:flex;align-items:center;gap:4px;font-weight:800;font-size:17px;font-variant-numeric:tabular-nums}
+.stat svg{width:22px;height:22px}
+.stat.streak{color:var(--color-brand-orange)} .stat.hearts{color:var(--color-brand-red)} .stat.xp{color:var(--color-brand-yellow)}
+.tabs{display:flex;gap:8px;padding-block:0 12px}
+.tab{border:2px solid transparent;background:transparent;padding:6px 14px;border-radius:12px;font-weight:800;color:var(--text-soft);cursor:pointer;text-transform:uppercase;letter-spacing:.06em;font-size:14px}
+.tab[aria-selected="true"]{background:var(--bg-card);border-color:var(--color-brand-blue);color:var(--color-brand-blue)}
+
+/* home */
+.goal{display:flex;gap:14px;align-items:center;background:var(--bg-card);border:2px solid var(--border-subtle);border-radius:var(--r);padding:14px 16px;margin-block:20px 8px}
+.goal .ring{flex:none}
+.goal .txt{min-width:0;flex:1}
+.goalbar{height:14px;padding:3px;margin-block:6px 4px;background:var(--border-subtle)}
+.goal b{font-size:17px;font-weight:900}
+.goal p{margin:2px 0 0;color:var(--text-soft);font-size:14px}
+.unit{margin-top:28px}
+.unit-head{background:var(--color-brand-green);color:#fff;border-radius:var(--r);padding:14px 18px;display:flex;justify-content:space-between;gap:12px;align-items:center;box-shadow:0 4px 0 var(--color-brand-green-dark)}
+.unit-head .eyebrow{font-size:13px;letter-spacing:.08em;text-transform:uppercase;opacity:.9;font-weight:800}
+.unit-head h2{font-size:22px}
+.unit-head .kw{font-family:var(--font-code);font-size:13px;background:rgba(0,0,0,.18);padding:4px 9px;border-radius:10px;white-space:nowrap}
+.unit:nth-of-type(5n+2) .unit-head{background:var(--color-brand-blue);box-shadow:0 4px 0 var(--color-brand-blue-dark)}
+.unit:nth-of-type(5n+3) .unit-head{background:var(--color-brand-purple);box-shadow:0 4px 0 #A55FD6}
+.unit:nth-of-type(5n+4) .unit-head{background:var(--color-brand-orange);box-shadow:0 4px 0 #D47C00}
+.unit.locked .unit-head{background:var(--bg-card);color:var(--text-soft);box-shadow:0 4px 0 var(--border-shadow);border:2px solid var(--border-subtle)}
+.path{display:flex;flex-direction:column;align-items:center;gap:20px;padding-block:24px 6px}
+.node{position:relative;display:flex;flex-direction:column;align-items:center;gap:8px;background:none;border:0;cursor:pointer;padding:0}
+.node .disc{width:72px;height:66px;border-radius:50%;display:grid;place-items:center;background:var(--color-brand-green);color:#fff;box-shadow:0 7px 0 var(--color-brand-green-dark);transition:transform .1s,box-shadow .1s}
+.node:active .disc{transform:translateY(5px);box-shadow:0 2px 0 var(--color-brand-green-dark)}
+.node .disc svg{width:30px;height:30px}
+.node.done .disc{background:var(--color-brand-yellow);color:#6B4E00;box-shadow:0 7px 0 var(--color-brand-yellow-dark)}
+.node.locked{cursor:not-allowed}
+.node.locked .disc{background:var(--border-subtle);color:var(--text-muted);box-shadow:0 7px 0 var(--border-shadow)}
+.node .label{font-weight:800;font-size:15px;max-width:160px;text-align:center}
+.node.locked .label{color:var(--text-muted)}
+.node.current .disc{outline:5px solid rgba(88,204,2,.25);outline-offset:5px}
+.node .start{position:absolute;top:-34px;background:var(--bg-card);border:2px solid var(--border-subtle);color:var(--color-brand-green);font-weight:900;font-size:13px;letter-spacing:.06em;padding:3px 12px;border-radius:12px;animation:bob 1.6s ease-in-out infinite}
+@keyframes bob{50%{transform:translateY(-4px)}}
+.foot-note{color:var(--text-soft);font-size:13px;text-align:center;padding-block:28px 40px}
+
+/* sandbox */
+.sbx{padding-block:20px 40px;display:flex;flex-direction:column;gap:14px}
+.sbx h2{font-size:26px}
+.sbx p{margin:0;color:var(--text-soft)}
+.schema{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:10px}
+.tbl{background:var(--bg-card);border:2px solid var(--border-subtle);border-radius:14px;padding:10px 12px;font-family:var(--font-code);font-size:13px;min-width:0}
+.tbl b{display:block;color:var(--color-brand-blue);margin-bottom:4px}
+.tbl span{color:var(--text-soft)}
+textarea.sql{width:100%;min-height:120px;resize:vertical;background:var(--bg-code);color:var(--text-main);border:2px solid var(--border-subtle);border-radius:var(--r);padding:14px 16px;font:16px/1.55 var(--font-code);caret-color:var(--color-brand-blue)}
+textarea.sql:focus{border-color:var(--color-brand-blue);outline:none}
+.row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+.chip{border:2px solid var(--border-subtle);border-bottom-width:4px;background:var(--bg-card);border-radius:12px;padding:5px 11px;font-size:13px;cursor:pointer;font-family:var(--font-code)}
+.chip:hover{background:var(--bg-card-hover)}
+.btn{border:0;border-radius:var(--r);padding:12px 28px;font-weight:900;font-size:16px;letter-spacing:.08em;text-transform:uppercase;cursor:pointer;background:var(--color-brand-green);color:#fff;border-bottom:4px solid var(--color-brand-green-dark);transition:transform .08s}
+.btn:hover{background:#61E002}
+.btn:active{transform:translateY(3px);border-bottom-width:1px}
+.btn[disabled]{background:var(--border-subtle);border-bottom-color:var(--border-shadow);color:var(--text-muted);cursor:not-allowed;transform:none}
+.btn.ghost{background:transparent;color:var(--color-brand-blue);border:2px solid var(--border-subtle);border-bottom-width:4px}
+.btn.ghost:hover{background:var(--bg-card)}
+.btn.ok{background:var(--color-brand-green);border-bottom-color:var(--color-brand-green-dark)}
+.btn.bad{background:var(--color-brand-red);border-bottom-color:var(--color-brand-red-dark)}
+.btn.bad:hover{background:#FF5E5E}
+.result{overflow-x:auto;border:2px solid var(--border-subtle);border-radius:14px;background:var(--bg-code)}
+.result table{border-collapse:collapse;width:100%;font-family:var(--font-code);font-size:13px;font-variant-numeric:tabular-nums}
+.result th,.result td{padding:7px 12px;text-align:left;border-bottom:1px solid var(--border-subtle);white-space:nowrap}
+.result th{background:var(--bg-card);font-weight:600;color:var(--color-brand-blue)}
+.result tr:last-child td{border-bottom:0}
+.result .meta{padding:6px 12px;font-size:12px;color:var(--text-soft);font-family:var(--font-heading)}
+.err{background:var(--bg-bad);color:var(--color-brand-red);border:2px solid var(--color-brand-red);border-radius:14px;padding:10px 14px;font-family:var(--font-code);font-size:13px}
+
+/* lesson player */
+.player{position:fixed;inset:0;max-width:480px;margin:0 auto;background:var(--bg-app);z-index:20;display:flex;flex-direction:column;padding-top:env(safe-area-inset-top,0px)}
+.p-top{width:100%;max-width:896px;display:flex;align-items:center;gap:20px;padding-block:22px}
+.x{border:0;background:none;cursor:pointer;color:var(--text-muted);padding:4px;display:grid}
+.x:hover{color:var(--text-main)}
+.x svg{width:26px;height:26px}
+.prog{flex:1;height:18px;background:var(--bg-card);border-radius:999px;overflow:hidden;padding:4px}
+.prog i{display:block;height:100%;min-width:10px;background:var(--color-brand-green);border-radius:999px;box-shadow:0 2px 0 var(--color-brand-green-dark) inset;transition:width .5s ease}
+.p-stats{display:flex;gap:16px}
+.p-body{flex:1;overflow-y:auto;display:flex}
+.p-body .wrap{margin-block:auto;padding-block:8px 28px;display:flex;flex-direction:column;gap:24px}
+.prompt{display:flex;align-items:center;gap:16px}
+.mascot{flex:none;width:96px;height:96px;display:grid;place-items:center}
+.byte{display:block;width:100%;height:100%;overflow:visible;filter:drop-shadow(0 6px 8px rgba(0,0,0,.35))}
+.byte .tail{transform-origin:150px 165px;animation:wag 2.4s ease-in-out infinite}
+@keyframes wag{50%{transform:rotate(8deg)}}
+.mascot.hop .byte{animation:hop .5s ease}
+.mascot.shake .byte{animation:shake .45s ease}
+@keyframes hop{40%{transform:translateY(-14px)}}
+@keyframes shake{20%,60%{transform:translateX(-5px)}40%,80%{transform:translateX(5px)}}
+.goal .byte-wrap{flex:none;width:64px;height:64px}
+.hero-byte{width:150px;height:150px}
+.brand .byte-wrap{width:36px;height:36px}
+.brand .byte{filter:none}
+.bubble{position:relative;min-width:0;background:var(--bg-card);border:2px solid var(--border-subtle);padding:14px 16px;border-radius:var(--r)}
+.bubble::before{content:"";position:absolute;left:-10px;top:50%;transform:translateY(-50%);border-top:9px solid transparent;border-bottom:9px solid transparent;border-right:9px solid var(--border-subtle)}
+.kind{font-size:12px;letter-spacing:.09em;text-transform:uppercase;font-weight:900;color:var(--color-brand-purple);margin-bottom:2px}
+.q{font-size:19px;font-weight:800;line-height:1.3;text-wrap:pretty}
+pre.code{margin:0;background:var(--bg-code);color:var(--text-main);border:2px solid var(--border-subtle);border-radius:var(--r);padding:20px 22px;font:500 17px/1.7 var(--font-code);overflow-x:auto;white-space:pre-wrap;word-break:break-word;box-shadow:inset 0 2px 6px rgba(0,0,0,.25)}
+pre.code .cm{display:block;color:var(--text-muted);margin-bottom:6px}
+.k{color:var(--color-brand-purple);font-weight:600}.s{color:var(--color-brand-yellow)}.n{color:var(--color-brand-orange)}.fn{color:var(--color-brand-blue)}
+.blank{display:inline-flex;align-items:center;justify-content:center;min-width:64px;height:38px;padding:0 12px;border-radius:10px;border:2px dashed var(--border-subtle);background:var(--bg-app);color:transparent;vertical-align:middle;font-weight:700;transition:all .15s}
+.blank.filled{border:2px solid var(--color-brand-blue);background:var(--bg-card);color:var(--color-brand-blue)}
+.opts{display:grid;gap:14px;grid-template-columns:1fr}
+.opts.grid2{grid-template-columns:1fr 1fr}
+.opt{text-align:left;border:2px solid var(--border-subtle);border-bottom-width:4px;background:var(--bg-card);border-radius:var(--r);padding:14px 16px;cursor:pointer;font-size:17px;font-weight:700;display:flex;gap:12px;align-items:center;min-width:0;transition:transform .08s}
+.opt:hover{background:var(--bg-card-hover)}
+.opt:active{transform:translateY(2px);border-bottom-width:2px}
+.opt .n{font-family:var(--font-heading);font-size:13px;color:var(--text-muted);border:2px solid var(--border-subtle);border-radius:8px;width:26px;height:26px;display:grid;place-items:center;flex:none}
+.opt.sel{border-color:var(--color-brand-blue);color:var(--color-brand-blue);background:var(--bg-card);border-bottom-color:var(--color-brand-blue-dark)}
+.opt.sel .n{border-color:var(--color-brand-blue);color:var(--color-brand-blue)}
+.opt.mono{font-family:var(--font-code);font-size:15px}
+.opts.grid2 .opt.mono{justify-content:center;font-size:19px;font-weight:700;padding:18px 12px}
+.opts.grid2 .opt.mono .n{display:none}
+.opt:disabled{cursor:default;transform:none}
+.ans-line{min-height:70px;border-bottom:2px solid var(--border-subtle);display:flex;flex-wrap:wrap;gap:10px;align-content:flex-start;padding-bottom:12px}
+.bank{display:flex;flex-wrap:wrap;gap:10px;justify-content:center}
+.tok{font-family:var(--font-code);font-size:16px;font-weight:600;background:var(--bg-card);border:2px solid var(--border-subtle);border-bottom-width:4px;border-radius:12px;padding:8px 13px;cursor:pointer}
+.tok:hover{background:var(--bg-card-hover)}
+.tok.used{background:var(--border-subtle);color:transparent;border-color:var(--border-subtle);cursor:default}
+.tok.kwt{color:var(--color-brand-purple)}
+.tok.used.kwt{color:transparent}
+.hint{color:var(--text-soft);font-size:14px}
+.peek{display:flex;flex-direction:column;gap:8px}
+.peek summary{cursor:pointer;color:var(--color-brand-blue);font-size:14px;font-weight:800;text-transform:uppercase;letter-spacing:.05em}
+.sheet{border-top:2px solid var(--border-subtle);background:var(--bg-app);padding-bottom:env(safe-area-inset-bottom,0px);transition:background .3s,border-color .3s}
+.sheet .wrap{padding-block:22px;display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap}
+.sheet.good{background:var(--bg-good);border-color:var(--color-brand-green)}
+.sheet.wrong{background:var(--bg-bad);border-color:var(--color-brand-red)}
+.fb{display:flex;gap:12px;align-items:flex-start;flex:1 1 300px;min-width:0}
+.fb svg.ic{flex:none;width:34px;height:34px}
+.fb h4{font-size:21px;font-weight:900}
+.sheet.good .fb{color:var(--color-brand-green)} .sheet.wrong .fb{color:var(--color-brand-red)}
+.fb p{margin:2px 0 0;font-size:14px}
+.sheet.good .fb p{color:var(--good-text)} .sheet.wrong .fb p,.sheet.wrong .fb .correct{color:var(--bad-text)}
+.fb .correct{font-family:var(--font-code);font-size:14px;margin-top:6px;word-break:break-word}
+.fb .result{margin-top:8px;max-height:150px;overflow:auto;color:var(--text-main)}
+.fb-body{min-width:0;flex:1}
+.sheet .btn{min-width:150px;padding:13px 28px;margin-left:auto}
+.done-screen{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:20px;text-align:center;padding:24px 16px}
+.done-screen h2{font-size:34px;color:var(--color-brand-yellow)}
+.tiles{display:flex;gap:12px;flex-wrap:wrap;justify-content:center}
+.tile{border:2px solid var(--border-subtle);border-radius:var(--r);min-width:110px;overflow:hidden;background:var(--bg-app)}
+.tile .h{font-size:12px;font-weight:900;letter-spacing:.07em;text-transform:uppercase;padding:5px;color:#fff}
+.tile .v{font-size:26px;font-weight:900;padding:8px 12px;font-variant-numeric:tabular-nums}
+.toast{position:fixed;left:50%;bottom:calc(20px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:var(--bg-card);border:2px solid var(--border-subtle);color:var(--text-main);padding:10px 16px;border-radius:14px;font-weight:800;z-index:40;max-width:calc(100% - 32px)}
+.engine{font-size:13px;color:var(--text-soft)}
+@media (max-width:480px){ .q{font-size:17px} .mascot{width:72px;height:72px} pre.code{font-size:15px;padding:16px} .sheet .btn{width:100%;margin-left:0} .p-top{gap:12px} .p-stats{gap:10px} }
+@media (prefers-reduced-motion: reduce){*{animation:none!important;transition:none!important}}
+</style>
+<style>body{margin:0}[hidden]{display:none!important}img{max-width:100%}</style>
+</head>
+<body>
+<div id="app"></div>
+<script src="sql-asm.js"></script>
+<script id="course">
+/* ---------- The practice database: a small café ---------- */
+const SEED = `
+CREATE TABLE menu (id INTEGER PRIMARY KEY, item TEXT, category TEXT, price INTEGER);
+INSERT INTO menu VALUES
+ (1,'Masala Chai','Tea',40),(2,'Green Tea','Tea',50),(3,'Cold Coffee','Coffee',120),(4,'Cappuccino','Coffee',140),
+ (5,'Samosa','Snack',30),(6,'Vada Pav','Snack',25),(7,'Brownie','Dessert',90),(8,'Cheesecake','Dessert',160);
+CREATE TABLE customers (id INTEGER PRIMARY KEY, name TEXT, city TEXT, joined TEXT);
+INSERT INTO customers VALUES
+ (1,'Aarav','Mumbai','2025-01-12'),(2,'Diya','Pune','2025-02-03'),(3,'Kabir','Mumbai','2025-03-20'),
+ (4,'Meera','Delhi','2025-04-08'),(5,'Rohan','Pune','2025-05-15'),(6,'Sara','Bridgeport','2025-06-01'),
+ (7,'Ishaan','Delhi','2025-08-10');
+CREATE TABLE orders (id INTEGER PRIMARY KEY, customer_id INTEGER, item_id INTEGER, qty INTEGER, order_date TEXT);
+INSERT INTO orders VALUES
+ (1,1,1,2,'2025-07-01'),(2,1,5,3,'2025-07-01'),(3,2,3,1,'2025-07-02'),(4,3,4,2,'2025-07-02'),(5,4,7,1,'2025-07-03'),
+ (6,2,1,1,'2025-07-03'),(7,5,6,4,'2025-07-04'),(8,6,8,1,'2025-07-04'),(9,3,2,1,'2025-07-05'),(10,1,3,1,'2025-07-05');
+CREATE TABLE staff (id INTEGER PRIMARY KEY, name TEXT, role TEXT, manager_id INTEGER, bonus INTEGER);
+INSERT INTO staff VALUES
+ (1,'Priya','Owner',NULL,NULL),(2,'Arjun','Manager',1,2000),(3,'Neha','Barista',2,500),
+ (4,'Vikram','Barista',2,NULL),(5,'Anaya','Cashier',2,300),(6,'Dev','Baker',1,NULL);
+`;
+const SCHEMA = [
+  {name:'menu', cols:['id','item','category','price']},
+  {name:'customers', cols:['id','name','city','joined']},
+  {name:'orders', cols:['id','customer_id','item_id','qty','order_date']},
+  {name:'staff', cols:['id','name','role','manager_id','bonus']},
+];
+
+/* Exercise types:
+   mc      – multiple choice (optional code)
+   fill    – code with ___ blank, pick the word
+   arrange – tap tokens into order; checked by running the query
+   write   – type a query; checked by comparing results with the answer */
+const UNITS = [
+ {title:'Meet SELECT', kw:'SELECT … FROM', lessons:[
+  {id:'l1', title:'Your first query', intro:{"title": "SELECT reads data", "text": "Every query starts with SELECT (what you want) and FROM (which table). The * means every column.", "code": "SELECT * FROM menu;"}, ex:[
+   {t:'mc', q:'What does SELECT do in SQL?', options:['Chooses which columns to return','Deletes rows from a table','Creates a new table','Saves your work'], a:0, why:'SELECT is how you read data. You list the columns you want back.'},
+   {t:'mc', q:'In this query, what does the * mean?', code:"SELECT * FROM menu;", options:['Every column in the table','Multiply the columns','Only the first row','Only columns that are numbers'], a:0, why:'* is shorthand for "all columns".'},
+   {t:'arrange', q:'Build a query that shows every column of the customers table.', tokens:['SELECT','*','FROM','customers'], extra:['WHERE','menu'], answer:'SELECT * FROM customers', why:'SELECT what, FROM where. That order never changes.'},
+   {t:'fill', q:'Fill in the missing keyword.', code:'SELECT name, city ___ customers;', options:['FROM','IN','TABLE'], a:0, why:'FROM names the table you read from.'},
+   {t:'write', q:'Write a query that shows all columns from the menu table.', answer:'SELECT * FROM menu', hint:'Two keywords, one star, one table name.'},
+  ]},
+  {id:'l2', title:'Pick columns', intro:{"title": "Pick only what you need", "text": "List column names after SELECT, separated by commas. Add DISTINCT to drop repeated values.", "code": "SELECT item, price FROM menu;"}, ex:[
+   {t:'arrange', q:'Show only the item and price of everything on the menu.', tokens:['SELECT','item',',','price','FROM','menu'], extra:['*','category'], answer:'SELECT item, price FROM menu', why:'Separate column names with commas.'},
+   {t:'mc', q:'Which query returns only customer names?', options:['SELECT name FROM customers;','SELECT customers FROM name;','SELECT * FROM customers;','FROM customers SELECT name;'], a:0, mono:true, why:'Column after SELECT, table after FROM.'},
+   {t:'mc', q:'How many rows does this query return?', code:'SELECT item FROM menu;', options:['1','4','8','It depends on price'], a:2, why:'There is no filter, so every one of the 8 menu rows comes back. Picking columns never changes the number of rows.'},
+   {t:'write', q:'Show the name and city of every customer.', answer:'SELECT name, city FROM customers', hint:'SELECT name, city FROM …'},
+   {t:'mc', q:'What does DISTINCT do here?', code:'SELECT DISTINCT city FROM customers;', options:['Removes duplicate rows from the result','Sorts the cities A to Z','Counts the cities','Picks one random city'], a:0, why:'Mumbai, Pune and Delhi each appear twice in customers. DISTINCT shows each city once.'},
+   {t:'write', q:'List every city your customers live in, each city only once.', answer:'SELECT DISTINCT city FROM customers', hint:'Put DISTINCT right after SELECT.'},
+  ]},
+ ]},
+ {title:'Filter rows', kw:'WHERE', lessons:[
+  {id:'l3', title:'WHERE basics', intro:{"title": "WHERE keeps matching rows", "text": "Put WHERE after FROM to filter rows. Compare with =, < or >, and wrap text in single quotes.", "code": "SELECT item, price FROM menu WHERE price < 50;"}, ex:[
+   {t:'mc', q:'What does a WHERE clause do?', options:['Keeps only the rows that match a condition','Picks which columns to show','Joins two tables','Renames a table'], a:0, why:'WHERE filters rows. SELECT picks columns.'},
+   {t:'arrange', q:'Show all customers who live in Pune.', tokens:['SELECT','*','FROM','customers','WHERE','city','=',"'Pune'"], extra:["'Mumbai'",'ORDER BY'], answer:"SELECT * FROM customers WHERE city = 'Pune'", why:"Text values go in single quotes: 'Pune'."},
+   {t:'fill', q:'Find items that cost less than ₹100.', code:'SELECT item FROM menu WHERE price ___ 100;', options:['<','>','='], a:0, why:'< means "less than".'},
+   {t:'mc', q:'How many rows come back?', code:"SELECT * FROM menu WHERE category = 'Tea';", options:['1','2','3','8'], a:1, why:'Masala Chai and Green Tea are the two Tea items.'},
+   {t:'write', q:'Show all columns for menu items that cost more than 100.', answer:'SELECT * FROM menu WHERE price > 100', hint:'… WHERE price > 100'},
+  ]},
+  {id:'l4', title:'AND, OR, LIKE', intro:{"title": "Combine conditions", "text": "AND needs both conditions to be true. OR needs either one. LIKE 'C%' matches text that starts with C.", "code": "SELECT item, price FROM menu WHERE category = 'Coffee' OR price > 100;"}, ex:[
+   {t:'mc', q:'Which query finds snacks that cost less than 30?', options:["SELECT * FROM menu WHERE category = 'Snack' AND price < 30;","SELECT * FROM menu WHERE category = 'Snack' OR price < 30;","SELECT * FROM menu WHERE category < 30;","SELECT Snack FROM menu WHERE price < 30;"], a:0, mono:true, why:'AND needs both conditions to be true. OR would also return every cheap non-snack.'},
+   {t:'arrange', q:'Show the names of customers from Mumbai or Delhi.', tokens:['SELECT','name','FROM','customers','WHERE','city','=',"'Mumbai'",'OR','city','=',"'Delhi'"], extra:['AND'], answer:"SELECT name FROM customers WHERE city = 'Mumbai' OR city = 'Delhi'", why:'With AND, no row could match: a customer can only live in one city.'},
+   {t:'mc', q:"What does LIKE 'C%' match?", code:"SELECT item FROM menu WHERE item LIKE 'C%';", options:['Items whose name starts with C','Items whose name ends with C','Items that contain exactly one C','Only the item named C%'], a:0, why:'% stands for "any characters". So C% means "C followed by anything".'},
+   {t:'write', q:"Show the item names that start with the letter 'C'.", answer:"SELECT item FROM menu WHERE item LIKE 'C%'", hint:"WHERE item LIKE 'C%'"},
+   {t:'fill', q:'Find items priced from 50 to 100.', code:'SELECT * FROM menu WHERE price ___ 50 AND 100;', options:['BETWEEN','IN','LIKE'], a:0, why:'BETWEEN a AND b includes both ends: 50 and 100.'},
+  ]},
+ ]},
+ {title:'Sort & limit', kw:'ORDER BY · LIMIT', lessons:[
+  {id:'l5', title:'Put things in order', intro:{"title": "Sort, then cut", "text": "ORDER BY sorts the result, smallest first. Add DESC for biggest first. LIMIT keeps only the first few rows.", "code": "SELECT item, price FROM menu ORDER BY price DESC LIMIT 3;"}, ex:[
+   {t:'mc', q:'What order does this produce?', code:'SELECT item, price FROM menu ORDER BY price DESC;', options:['Most expensive first','Cheapest first','Alphabetical by item','The order rows were added'], a:0, why:'DESC means descending: biggest first. The default is ASC, smallest first.'},
+   {t:'arrange', q:'List item and price, cheapest first.', tokens:['SELECT','item',',','price','FROM','menu','ORDER BY','price'], extra:['DESC','WHERE'], answer:'SELECT item, price FROM menu ORDER BY price', ordered:true, why:'ORDER BY sorts ascending unless you add DESC.'},
+   {t:'fill', q:'Show only the very first customer who joined.', code:'SELECT name FROM customers ORDER BY joined ___ 1;', options:['LIMIT','TOP','FIRST'], a:0, why:'LIMIT caps how many rows come back. It goes last.'},
+   {t:'mc', q:'What does this return?', code:'SELECT item FROM menu ORDER BY price LIMIT 1;', options:['Vada Pav','Cheesecake','Masala Chai','Samosa'], a:0, why:'Sorted cheapest first, the top row is Vada Pav at ₹25.'},
+   {t:'write', q:'Show the item and price of the 3 most expensive menu items, priciest first.', answer:'SELECT item, price FROM menu ORDER BY price DESC LIMIT 3', ordered:true, hint:'ORDER BY price DESC, then LIMIT 3.'},
+  ]},
+ ]},
+ {title:'Summarise data', kw:'COUNT · SUM · GROUP BY', lessons:[
+  {id:'l6', title:'Count and add up', intro:{"title": "Sum it up", "text": "COUNT(*) counts rows. SUM, AVG, MIN and MAX work on a number column and return a single value.", "code": "SELECT COUNT(*), AVG(price), MAX(price) FROM menu;"}, ex:[
+   {t:'mc', q:'What does COUNT(*) give you?', options:['The number of rows','The sum of all numbers','The number of columns','The biggest value'], a:0, why:'COUNT(*) counts rows.'},
+   {t:'write', q:'How many customers are there? Write a query that returns the count.', answer:'SELECT COUNT(*) FROM customers', hint:'SELECT COUNT(*) FROM …'},
+   {t:'arrange', q:'Find the average price on the menu.', tokens:['SELECT','AVG(price)','FROM','menu'], extra:['SUM(price)','GROUP BY'], answer:'SELECT AVG(price) FROM menu', why:'AVG adds up the values and divides by how many there are.'},
+   {t:'mc', q:'What does this return?', code:'SELECT SUM(qty) FROM orders;', options:['17','10','8','4'], a:0, why:'SUM adds up qty across all 10 orders: 2+3+1+2+1+1+4+1+1+1 = 17. COUNT(*) would give 10.'},
+   {t:'mc', q:'What does this return?', code:'SELECT MAX(price) FROM menu;', options:['160','25','8','Cheesecake'], a:0, why:'MAX returns the largest price. It returns the value, not the item name.'},
+  ]},
+  {id:'l7', title:'GROUP BY', intro:{"title": "GROUP BY makes buckets", "text": "GROUP BY merges rows that share a value into one row, and the function runs once per group. HAVING filters those groups.", "code": "SELECT category, COUNT(*) FROM menu GROUP BY category;"}, ex:[
+   {t:'mc', q:'What does GROUP BY category do?', code:'SELECT category, COUNT(*) FROM menu GROUP BY category;', options:['Makes one result row per category','Sorts rows by category','Deletes duplicate categories','Only works on numbers'], a:0, why:'Rows with the same category collapse into one group, and COUNT(*) runs once per group.'},
+   {t:'arrange', q:'Count how many items are in each menu category.', tokens:['SELECT','category',',','COUNT(*)','FROM','menu','GROUP BY','category'], extra:['ORDER BY','SUM(price)'], answer:'SELECT category, COUNT(*) FROM menu GROUP BY category', why:'Whatever you group by also goes in SELECT, so you can tell the groups apart.'},
+   {t:'write', q:'Count the customers in each city. Show city and the count.', answer:'SELECT city, COUNT(*) FROM customers GROUP BY city', hint:'SELECT city, COUNT(*) … GROUP BY city'},
+   {t:'fill', q:'Only keep cities with more than one customer.', code:'SELECT city, COUNT(*) FROM customers\nGROUP BY city ___ COUNT(*) > 1;', options:['HAVING','WHERE','ORDER BY'], a:0, why:'HAVING filters groups after they are counted. WHERE filters single rows before grouping.'},
+   {t:'mc', q:'When do you use HAVING instead of WHERE?', options:['To filter on a group total like COUNT or SUM','To filter on text columns','To sort the result','Never: they are the same'], a:0, why:'WHERE runs before grouping, so it cannot see COUNT(*). HAVING runs after.'},
+  ]},
+ ]},
+ {title:'Join tables', kw:'JOIN … ON', lessons:[
+  {id:'l8', title:'Connect tables', intro:{"title": "JOIN connects tables", "text": "orders only stores a customer_id. JOIN … ON matches it to customers.id so you can see names and orders together.", "code": "SELECT customers.name, orders.qty\nFROM orders JOIN customers\nON orders.customer_id = customers.id\nLIMIT 4;"}, ex:[
+   {t:'mc', q:'Why would you JOIN orders with customers?', options:['To see who placed each order, using customer_id','To delete old orders','To make the table bigger','To sort orders by name'], a:0, why:'orders only stores customer_id. A JOIN looks up the matching row in customers.'},
+   {t:'fill', q:'Fill in the keyword that says how the tables match.', code:'SELECT customers.name, orders.qty\nFROM orders JOIN customers\n___ orders.customer_id = customers.id;', options:['ON','WHERE','BY'], a:0, why:'JOIN … ON tells SQL which columns link the two tables.'},
+   {t:'arrange', q:"Show each order's item name and qty.", tokens:['SELECT','menu.item',',','orders.qty','FROM','orders','JOIN','menu','ON','orders.item_id','=','menu.id'], extra:['customers.id'], answer:'SELECT menu.item, orders.qty FROM orders JOIN menu ON orders.item_id = menu.id', why:'orders.item_id points at menu.id.'},
+   {t:'write', q:'Show the customer name and order_date for every order.', answer:'SELECT customers.name, orders.order_date FROM orders JOIN customers ON orders.customer_id = customers.id', hint:'FROM orders JOIN customers ON orders.customer_id = customers.id'},
+   {t:'mc', q:'Which customer shows up with a LEFT JOIN but disappears with a plain JOIN?', code:'SELECT customers.name, orders.id\nFROM customers LEFT JOIN orders\nON orders.customer_id = customers.id;', options:['Ishaan','Aarav','Sara','Nobody'], a:0, why:'Ishaan has no orders. A plain JOIN drops him; LEFT JOIN keeps him with NULL for orders.id.'},
+  ]},
+  {id:'l9', title:'Café boss challenge', intro:{"title": "Boss challenge", "text": "Time to mix everything. Clause order: SELECT, FROM, JOIN, WHERE, GROUP BY, HAVING, ORDER BY, LIMIT.", "code": "SELECT city, COUNT(*) FROM customers\nGROUP BY city HAVING COUNT(*) > 1\nORDER BY city;"}, ex:[
+   {t:'mc', q:'Which clause order is correct?', options:['SELECT → FROM → WHERE → GROUP BY → HAVING → ORDER BY → LIMIT','SELECT → WHERE → FROM → ORDER BY → GROUP BY','FROM → SELECT → LIMIT → WHERE','SELECT → FROM → ORDER BY → WHERE → LIMIT'], a:0, why:'Remember the order: SELECT, FROM, WHERE, GROUP BY, HAVING, ORDER BY, LIMIT.'},
+   {t:'arrange', q:'Show cities that have more than one customer, with their count.', tokens:['SELECT','city',',','COUNT(*)','FROM','customers','GROUP BY','city','HAVING','COUNT(*)','>','1'], extra:['WHERE'], answer:'SELECT city, COUNT(*) FROM customers GROUP BY city HAVING COUNT(*) > 1', why:'Mumbai, Pune and Delhi each have 2 customers.'},
+   {t:'write', q:'Show the names of customers who ordered Masala Chai.', answer:"SELECT customers.name FROM orders JOIN customers ON orders.customer_id = customers.id JOIN menu ON orders.item_id = menu.id WHERE menu.item = 'Masala Chai'", hint:"Join orders to customers and to menu, then WHERE menu.item = 'Masala Chai'."},
+   {t:'write', q:'Revenue by category: show each category and SUM(price × qty), highest first.', answer:'SELECT menu.category, SUM(menu.price * orders.qty) FROM orders JOIN menu ON orders.item_id = menu.id GROUP BY menu.category ORDER BY 2 DESC', ordered:true, hint:'JOIN orders to menu, GROUP BY menu.category, ORDER BY the SUM DESC.'},
+  ]},
+ ]},
+];
+UNITS.forEach(u=>{ if(!u.section) u.section='Basics' });
+UNITS.push(
+ {section:'Intermediate', title:'Aliases & NULL', kw:'AS · IS NULL', lessons:[
+  {id:'l10', title:'Rename with AS', intro:{title:'Give things better names', text:'AS renames a column or a table, but only inside this query. It makes results easier to read and long queries shorter to write.', code:"SELECT item AS dish, price * 2 AS double_price\nFROM menu LIMIT 3;"}, ex:[
+   {t:'mc', q:'What does AS do here?', code:'SELECT item AS dish FROM menu;', options:['Renames the column to dish in the result','Renames the column in the table forever','Keeps only rows named dish','Creates a new table called dish'], a:0, why:'AS only changes the name in this result. The table itself is untouched.'},
+   {t:'arrange', q:'Count the menu items and call the column total.', tokens:['SELECT','COUNT(*)','AS','total','FROM','menu'], extra:['WHERE','price'], answer:'SELECT COUNT(*) AS total FROM menu', why:'Naming a calculated column makes the result readable.'},
+   {t:'write', q:'Show each item and its price with 18% tax added. Name the new column price_with_tax.', answer:'SELECT item, price * 1.18 AS price_with_tax FROM menu', hint:'SELECT item, price * 1.18 AS price_with_tax FROM …'},
+   {t:'fill', q:'Give the menu table a short nickname.', code:'SELECT m.item, m.price FROM menu ___ m;', options:['AS','IS','ON'], a:0, why:'Table nicknames save typing in long queries. For tables, AS is optional: FROM menu m also works.'},
+  ]},
+  {id:'l11', title:'Missing values: NULL', intro:{title:'NULL means no value', text:'NULL is an empty box, not zero and not blank text. You cannot compare it with =. Use IS NULL or IS NOT NULL, and COALESCE to swap in a default.', code:'SELECT name, role, bonus FROM staff;'}, ex:[
+   {t:'mc', q:'Which query finds staff with no bonus?', options:['SELECT name FROM staff WHERE bonus IS NULL;','SELECT name FROM staff WHERE bonus = NULL;','SELECT name FROM staff WHERE bonus = 0;','SELECT name FROM staff WHERE NULL;'], a:0, mono:true, why:'= NULL is never true, because NULL is not a value you can compare. Always use IS NULL.'},
+   {t:'mc', q:'How many rows does this return?', code:'SELECT * FROM staff WHERE bonus = NULL;', options:['0','3','6','An error'], a:0, why:'Comparing anything to NULL gives "unknown", so no row matches. That is why IS NULL exists.'},
+   {t:'write', q:'Show the names of staff who report to a manager (manager_id is not empty).', answer:'SELECT name FROM staff WHERE manager_id IS NOT NULL', hint:'… WHERE manager_id IS NOT NULL'},
+   {t:'fill', q:'Show 0 instead of NULL for missing bonuses.', code:'SELECT name, ___(bonus, 0) FROM staff;', options:['COALESCE','NULLIF','ISNULL'], a:0, why:'COALESCE returns the first value in its list that is not NULL.'},
+   {t:'mc', q:'What does this return?', code:'SELECT COUNT(bonus) FROM staff;', options:['3','6','4','0'], a:0, why:'COUNT(column) skips NULLs. Only Arjun, Neha and Anaya have a bonus. COUNT(*) would give 6.'},
+  ]},
+ ]},
+ {section:'Intermediate', title:'Text & numbers', kw:'UPPER · LENGTH · ROUND', lessons:[
+  {id:'l12', title:'Text & math functions', intro:{title:'Functions change values', text:'Functions work on each row. UPPER and LOWER change letter case, LENGTH counts characters, || glues text together and ROUND rounds numbers.', code:"SELECT UPPER(name), LENGTH(name),\n  name || ' from ' || city AS intro\nFROM customers LIMIT 3;"}, ex:[
+   {t:'mc', q:'What does this return?', code:'SELECT UPPER(item) FROM menu WHERE id = 1;', options:['MASALA CHAI','masala chai','Masala Chai','M'], a:0, why:'Item 1 is Masala Chai, and UPPER turns every letter into a capital.'},
+   {t:'write', q:"Show each customer's name and how many letters it has. Name the column name_length.", answer:'SELECT name, LENGTH(name) AS name_length FROM customers', hint:'LENGTH(name) AS name_length'},
+   {t:'arrange', q:"Join name and city into one piece of text, like 'Aarav - Mumbai'.", tokens:['SELECT','name','||',"' - '",'||','city','FROM','customers'], extra:['+','AND'], answer:"SELECT name || ' - ' || city FROM customers", why:'In SQLite and Postgres, || joins text. (+ adds numbers.)'},
+   {t:'mc', q:'What does this return?', code:'SELECT ROUND(AVG(price), 1) FROM menu;', options:['81.9','81.875','82','81'], a:0, why:'The average is 81.875. ROUND(x, 1) keeps one decimal place: 81.9.'},
+   {t:'fill', q:'Find items whose name is longer than 8 characters.', code:'SELECT item FROM menu WHERE ___(item) > 8;', options:['LENGTH','COUNT','SIZE'], a:0, why:'COUNT counts rows. LENGTH measures the text inside one row.'},
+  ]},
+ ]},
+ {section:'Intermediate', title:'Joins in depth', kw:'LEFT JOIN · self join', lessons:[
+  {id:'l13', title:'LEFT JOIN', intro:{title:'Keep rows that do not match', text:'A plain JOIN keeps only rows that match in both tables. LEFT JOIN keeps every row from the left table and fills the gaps with NULL.', code:"SELECT customers.name, orders.id\nFROM customers LEFT JOIN orders\nON orders.customer_id = customers.id\nWHERE orders.id IS NULL;"}, ex:[
+   {t:'mc', q:'How many rows does this return?', code:'SELECT * FROM customers LEFT JOIN orders\nON orders.customer_id = customers.id;', options:['11','10','7','17'], a:0, why:'All 10 orders match a customer, plus Ishaan, who has no orders, gets one row with NULLs: 11.'},
+   {t:'write', q:'Find customers who have never placed an order. Show their name.', answer:'SELECT customers.name FROM customers LEFT JOIN orders ON orders.customer_id = customers.id WHERE orders.id IS NULL', hint:'LEFT JOIN orders, then WHERE orders.id IS NULL'},
+   {t:'write', q:'Count orders per customer, including customers with 0 orders. Show name and the count.', answer:'SELECT customers.name, COUNT(orders.id) FROM customers LEFT JOIN orders ON orders.customer_id = customers.id GROUP BY customers.id', hint:'Use COUNT(orders.id), not COUNT(*): it skips the NULL row, so Ishaan gets 0.'},
+   {t:'fill', q:'Keep every menu item, even ones nobody ordered.', code:'SELECT menu.item, orders.qty\nFROM menu ___ JOIN orders\nON orders.item_id = menu.id;', options:['LEFT','INNER','CROSS'], a:0, why:'LEFT keeps every row from the first table, menu.'},
+  ]},
+  {id:'l14', title:'Self joins & 3 tables', intro:{title:'A table can join itself', text:'staff.manager_id points at another row in the same staff table. Give the table two nicknames, one for the employee and one for the manager, and join them.', code:"SELECT e.name AS employee, m.name AS manager\nFROM staff e JOIN staff m\nON e.manager_id = m.id;"}, ex:[
+   {t:'mc', q:"Who is Neha's manager?", options:['Arjun','Priya','Dev','Nobody'], a:0, tables:['staff'], why:"Neha's manager_id is 2, and staff member 2 is Arjun."},
+   {t:'arrange', q:"List each employee next to their manager's name.", tokens:['SELECT','e.name',',','m.name','FROM','staff','e','JOIN','staff','m','ON','e.manager_id','=','m.id'], extra:['m.manager_id'], answer:'SELECT e.name, m.name FROM staff e JOIN staff m ON e.manager_id = m.id', why:'e is the employee row, m is the manager row.'},
+   {t:'write', q:"Show every staff member with their manager's name. Keep Priya, who has no manager.", answer:'SELECT e.name, m.name FROM staff e LEFT JOIN staff m ON e.manager_id = m.id', hint:'Same self join, but LEFT JOIN.'},
+   {t:'write', q:'Show customer name, item and qty for every order. You need three tables.', answer:'SELECT customers.name, menu.item, orders.qty FROM orders JOIN customers ON orders.customer_id = customers.id JOIN menu ON orders.item_id = menu.id', hint:'FROM orders JOIN customers ON … JOIN menu ON …'},
+  ]},
+ ]},
+ {section:'Intermediate', title:'Subqueries', kw:'( SELECT … )', lessons:[
+  {id:'l15', title:'Queries inside queries', intro:{title:'A query inside a query', text:'A subquery is a SELECT in brackets inside another query. SQL works out the inner one first and uses its answer.', code:"SELECT item, price FROM menu\nWHERE price > (SELECT AVG(price) FROM menu);"}, ex:[
+   {t:'mc', q:'Which part runs first?', code:'SELECT item FROM menu\nWHERE price > (SELECT AVG(price) FROM menu);', options:['The inner SELECT AVG(price)','The outer SELECT item','Both at exactly the same time','Neither: this is an error'], a:0, why:'The inner query gives one number, 81.875, and the outer query compares against it.'},
+   {t:'mc', q:'What does this return?', code:'SELECT COUNT(*) FROM menu\nWHERE price > (SELECT AVG(price) FROM menu);', options:['4','3','5','8'], a:0, why:'The average is 81.875. Cold Coffee, Cappuccino, Brownie and Cheesecake cost more.'},
+   {t:'write', q:'Show the most expensive item. Use a subquery with MAX.', answer:'SELECT item FROM menu WHERE price = (SELECT MAX(price) FROM menu)', hint:'WHERE price = (SELECT MAX(price) FROM menu)'},
+   {t:'fill', q:'Find customers who placed at least one order.', code:'SELECT name FROM customers\nWHERE id ___ (SELECT customer_id FROM orders);', options:['IN','=','LIKE'], a:0, why:'The subquery returns many ids, so use IN. = only works with a single value.'},
+   {t:'write', q:'Show the names of customers who never ordered. Use NOT IN.', answer:'SELECT name FROM customers WHERE id NOT IN (SELECT customer_id FROM orders)', hint:'WHERE id NOT IN (SELECT customer_id FROM orders)'},
+  ]},
+  {id:'l16', title:'EXISTS & derived tables', intro:{title:'EXISTS and subqueries in FROM', text:'EXISTS is true when the subquery finds at least one row. You can also put a subquery in FROM and query its result like a table.', code:"SELECT name FROM customers c\nWHERE EXISTS (\n  SELECT 1 FROM orders o\n  WHERE o.customer_id = c.id AND o.qty >= 3\n);"}, ex:[
+   {t:'mc', q:'Who does this return?', code:'SELECT name FROM customers c\nWHERE EXISTS (SELECT 1 FROM orders o\n  WHERE o.customer_id = c.id AND o.qty >= 2);', options:['Aarav, Kabir and Rohan','Aarav and Rohan','Only Kabir','All 7 customers'], a:0, tables:['customers','orders'], why:'Orders with qty 2 or more belong to customers 1, 3 and 5: Aarav, Kabir and Rohan.'},
+   {t:'mc', q:'Which categories does this return?', code:'SELECT category FROM (\n  SELECT category, AVG(price) AS avg_p\n  FROM menu GROUP BY category\n) WHERE avg_p > 100;', options:['Coffee and Dessert','Only Coffee','Dessert and Tea','All four'], a:0, why:'Average prices: Coffee 130, Dessert 125, Tea 45, Snack 27.5.'},
+   {t:'write', q:'Sum qty per customer in a subquery, then return the average of those totals as one number.', answer:'SELECT AVG(total) FROM (SELECT customer_id, SUM(qty) AS total FROM orders GROUP BY customer_id)', hint:'SELECT AVG(total) FROM (SELECT customer_id, SUM(qty) AS total FROM orders GROUP BY …)'},
+   {t:'mc', q:'When is EXISTS a good choice?', options:['To check if a matching row exists in another table','To create a table only if it is missing','To count every row','To sort the result'], a:0, why:'EXISTS stops as soon as it finds one match, so it is quick for yes/no checks.'},
+  ]},
+ ]},
+ {section:'Advanced', title:'CASE logic', kw:'CASE WHEN', lessons:[
+  {id:'l17', title:'If / else in SQL', intro:{title:'CASE is SQL’s if / else', text:'CASE checks each WHEN in order and returns the THEN value of the first one that is true. ELSE covers everything else.', code:"SELECT item, price,\n  CASE WHEN price < 50 THEN 'Budget'\n       WHEN price < 130 THEN 'Regular'\n       ELSE 'Premium' END AS tier\nFROM menu;"}, ex:[
+   {t:'mc', q:'What tier does Brownie (₹90) get?', code:"SELECT item,\n  CASE WHEN price < 50 THEN 'Budget'\n       WHEN price < 130 THEN 'Regular'\n       ELSE 'Premium' END AS tier\nFROM menu;", options:['Regular','Budget','Premium','NULL'], a:0, tables:['menu'], why:'90 is not under 50, but it is under 130, so the second WHEN wins.'},
+   {t:'fill', q:'Finish the CASE.', code:"SELECT item,\n  CASE WHEN price > 100 THEN 'pricey' ___ 'cheap' END\nFROM menu;", options:['ELSE','THEN','OTHERWISE'], a:0, why:'ELSE gives the value when no WHEN matched.'},
+   {t:'mc', q:'What happens when no WHEN matches and there is no ELSE?', options:['The result is NULL','The row is removed','SQL shows an error','The result is 0'], a:0, why:'Without ELSE, CASE quietly returns NULL.'},
+   {t:'write', q:"Label each customer 'Local' if their city is Mumbai, otherwise 'Visitor'. Show name and the label.", answer:"SELECT name, CASE WHEN city = 'Mumbai' THEN 'Local' ELSE 'Visitor' END FROM customers", hint:"CASE WHEN city = 'Mumbai' THEN 'Local' ELSE 'Visitor' END"},
+   {t:'write', q:'In one row, count the menu items under 50 and the items costing 50 or more (two columns).', answer:'SELECT SUM(CASE WHEN price < 50 THEN 1 ELSE 0 END), SUM(CASE WHEN price >= 50 THEN 1 ELSE 0 END) FROM menu', hint:'SUM(CASE WHEN price < 50 THEN 1 ELSE 0 END), and the same for >= 50'},
+  ]},
+ ]},
+ {section:'Advanced', title:'Combine results', kw:'UNION · EXCEPT', lessons:[
+  {id:'l18', title:'Set operations', intro:{title:'Stack query results', text:'UNION puts the rows of two queries together and removes duplicates. UNION ALL keeps duplicates. INTERSECT keeps rows in both; EXCEPT keeps rows in the first but not the second.', code:"SELECT name FROM customers WHERE city = 'Pune'\nUNION\nSELECT name FROM staff WHERE role = 'Barista';"}, ex:[
+   {t:'mc', q:'What is the difference between UNION and UNION ALL?', options:['UNION removes duplicate rows; UNION ALL keeps them','UNION ALL removes duplicate rows','UNION sorts by date','There is no difference'], a:0, why:'UNION ALL is faster because it skips the duplicate check.'},
+   {t:'mc', q:'How many rows does this return?', code:'SELECT city FROM customers\nUNION ALL\nSELECT city FROM customers;', options:['14','7','4','8'], a:0, why:'UNION ALL keeps every row from both queries: 7 + 7.'},
+   {t:'mc', q:'And this one?', code:'SELECT city FROM customers\nUNION\nSELECT city FROM customers;', options:['4','14','7','8'], a:0, why:'UNION removes duplicates, leaving Mumbai, Pune, Delhi and Bridgeport.'},
+   {t:'fill', q:'Find customer ids that have no orders.', code:'SELECT id FROM customers\n___\nSELECT customer_id FROM orders;', options:['EXCEPT','UNION','INTERSECT'], a:0, why:'EXCEPT keeps ids in the first list that are missing from the second: only 7 (Ishaan).'},
+   {t:'write', q:'Make one list of everyone: all customer names and all staff names.', answer:'SELECT name FROM customers UNION SELECT name FROM staff', hint:'SELECT name FROM customers UNION SELECT name FROM staff'},
+  ]},
+ ]},
+ {section:'Advanced', title:'CTEs', kw:'WITH … AS', lessons:[
+  {id:'l19', title:'WITH clauses', intro:{title:'Name a step with WITH', text:'A CTE (common table expression) names a subquery up front. Below it, you use that name like a table. Long queries become steps you can read top to bottom.', code:"WITH spend AS (\n  SELECT customer_id, SUM(qty) AS items\n  FROM orders GROUP BY customer_id\n)\nSELECT * FROM spend WHERE items >= 3;"}, ex:[
+   {t:'mc', q:'Where does a CTE go?', options:['At the very start, before the main SELECT','After ORDER BY','Only inside WHERE','In a separate file'], a:0, why:'WITH … AS ( … ) comes first, then the query that uses it.'},
+   {t:'fill', q:'Start the CTE.', code:'___ cheap AS (SELECT * FROM menu WHERE price < 50)\nSELECT item FROM cheap;', options:['WITH','AS','CREATE'], a:0, why:'WITH opens a CTE. AS sits between its name and the brackets.'},
+   {t:'mc', q:'What does this return?', code:'WITH t AS (\n  SELECT city, COUNT(*) AS n FROM customers GROUP BY city\n)\nSELECT city FROM t WHERE n = 1;', options:['Bridgeport','Mumbai','Pune and Delhi','Nothing'], a:0, why:'Every other city has 2 customers. Only Bridgeport has 1.'},
+   {t:'write', q:'Write a CTE named sales with each order’s total (price × qty), then show total revenue as one number.', answer:'WITH sales AS (SELECT menu.price * orders.qty AS total FROM orders JOIN menu ON orders.item_id = menu.id) SELECT SUM(total) FROM sales', hint:'WITH sales AS (SELECT menu.price * orders.qty AS total FROM orders JOIN menu ON …) SELECT SUM(total) FROM sales'},
+  ]},
+  {id:'l20', title:'Recursive CTEs', intro:{title:'CTEs that call themselves', text:'WITH RECURSIVE starts from a base row, then keeps adding rows built from the previous ones until a condition stops it. It is used for number series and org charts.', code:"WITH RECURSIVE n(x) AS (\n  SELECT 1\n  UNION ALL\n  SELECT x + 1 FROM n WHERE x < 5\n)\nSELECT x FROM n;"}, ex:[
+   {t:'mc', q:'What stops this recursion?', code:'WITH RECURSIVE n(x) AS (\n  SELECT 1 UNION ALL\n  SELECT x + 1 FROM n WHERE x < 5\n) SELECT x FROM n;', options:['WHERE x < 5','UNION ALL','SELECT 1','Nothing: it runs forever'], a:0, why:'When x reaches 5, the WHERE finds no new rows, so it stops.'},
+   {t:'mc', q:'What does this return?', code:'WITH RECURSIVE n(x) AS (\n  SELECT 2 UNION ALL\n  SELECT x * 2 FROM n WHERE x < 16\n) SELECT MAX(x) FROM n;', options:['16','32','8','2'], a:0, why:'2 → 4 → 8 → 16. At 16 the WHERE stops it.'},
+   {t:'write', q:'Generate the numbers 1 to 10 with a recursive CTE.', answer:'WITH RECURSIVE n(x) AS (SELECT 1 UNION ALL SELECT x + 1 FROM n WHERE x < 10) SELECT x FROM n', hint:'Copy the example and change 5 to 10.'},
+   {t:'write', q:'Walk the staff chart from Priya (id 1). Show each person’s name and level (Priya 0, her reports 1, and so on).', answer:'WITH RECURSIVE chain(id, name, level) AS (SELECT id, name, 0 FROM staff WHERE id = 1 UNION ALL SELECT staff.id, staff.name, chain.level + 1 FROM staff JOIN chain ON staff.manager_id = chain.id) SELECT name, level FROM chain', hint:'WITH RECURSIVE chain(id, name, level) AS (SELECT id, name, 0 FROM staff WHERE id = 1 UNION ALL SELECT staff.id, staff.name, chain.level + 1 FROM staff JOIN chain ON staff.manager_id = chain.id) SELECT name, level FROM chain'},
+  ]},
+ ]},
+ {section:'Advanced', title:'Window functions', kw:'OVER (…)', lessons:[
+  {id:'l21', title:'Rank rows', intro:{title:'Calculate without collapsing', text:'Window functions add a calculated column but keep every row, unlike GROUP BY. OVER ( … ) says which rows to look at and in what order.', code:"SELECT item, price,\n  RANK() OVER (ORDER BY price DESC) AS price_rank\nFROM menu;"}, ex:[
+   {t:'mc', q:'How is a window function different from GROUP BY?', options:['It keeps every row and adds a calculated column','It deletes duplicate rows','It only works on text','It returns one row per table'], a:0, why:'GROUP BY squashes rows into groups. A window function leaves them all in place.'},
+   {t:'mc', q:'Ranked by price, most expensive first, what rank is Cold Coffee?', code:'SELECT item, RANK() OVER (ORDER BY price DESC) FROM menu;', options:['3','1','2','6'], a:0, why:'Cheesecake (160) is 1, Cappuccino (140) is 2, Cold Coffee (120) is 3.'},
+   {t:'write', q:'Number the customers 1, 2, 3… in the order they joined. Show name and the number.', answer:'SELECT name, ROW_NUMBER() OVER (ORDER BY joined) FROM customers', hint:'ROW_NUMBER() OVER (ORDER BY joined)'},
+   {t:'mc', q:'Two items tie for 1st place. What number comes next?', options:['RANK gives 3, DENSE_RANK gives 2','Both give 2','Both give 3','RANK gives 2, DENSE_RANK gives 3'], a:0, why:'RANK skips a number after a tie. DENSE_RANK does not.'},
+  ]},
+  {id:'l22', title:'PARTITION BY', intro:{title:'Windows per group', text:'PARTITION BY restarts the window for each group. It is like GROUP BY, except every row stays in the result.', code:"SELECT category, item, price,\n  RANK() OVER (PARTITION BY category\n               ORDER BY price DESC) AS rank_in_cat\nFROM menu;"}, ex:[
+   {t:'mc', q:'In this query, how many items get rank 1?', code:'SELECT item, RANK() OVER (\n  PARTITION BY category ORDER BY price DESC)\nFROM menu;', options:['4','1','8','2'], a:0, why:'Ranking restarts in each of the 4 categories, so each category has a #1.'},
+   {t:'fill', q:"Show each item next to its category's average price.", code:'SELECT item, price,\n  AVG(price) OVER (___ category) AS cat_avg\nFROM menu;', options:['PARTITION BY','GROUP BY','ORDER BY'], a:0, why:'Inside OVER, use PARTITION BY. GROUP BY belongs to the main query.'},
+   {t:'write', q:'Find the most expensive item in each category. Show category and item.', answer:'SELECT category, item FROM (SELECT category, item, RANK() OVER (PARTITION BY category ORDER BY price DESC) AS r FROM menu) WHERE r = 1', hint:'Rank inside a subquery with PARTITION BY category ORDER BY price DESC, then keep WHERE r = 1.'},
+  ]},
+  {id:'l23', title:'Running totals & LAG', intro:{title:'Running totals, previous rows', text:'SUM() OVER (ORDER BY …) keeps adding as it goes, which makes a running total. LAG reads the previous row and LEAD reads the next one.', code:"SELECT id, qty,\n  SUM(qty) OVER (ORDER BY id) AS running_qty\nFROM orders;"}, ex:[
+   {t:'mc', q:'What is running_qty for order 3?', code:'SELECT id, qty, SUM(qty) OVER (ORDER BY id)\nFROM orders;', options:['6','1','5','17'], a:0, why:'Orders 1, 2 and 3 have qty 2, 3 and 1. 2 + 3 + 1 = 6.'},
+   {t:'fill', q:"Show each order's qty next to the previous order's qty.", code:'SELECT id, qty,\n  ___(qty) OVER (ORDER BY id) AS prev_qty\nFROM orders;', options:['LAG','LEAD','PREV'], a:0, why:'LAG looks back one row. The first order gets NULL because nothing comes before it.'},
+   {t:'mc', q:'What does LEAD(qty) give for the very last order?', options:['NULL','0','Its own qty','The first order’s qty'], a:0, tables:['orders'], why:'There is no next row, so LEAD returns NULL.'},
+   {t:'write', q:'Show each order_date, that day’s total qty, and a running total across the days.', answer:'SELECT order_date, SUM(qty), SUM(SUM(qty)) OVER (ORDER BY order_date) FROM orders GROUP BY order_date', hint:'GROUP BY order_date, then SUM(SUM(qty)) OVER (ORDER BY order_date).'},
+  ]},
+ ]},
+ {section:'Pro', title:'Change data', kw:'INSERT · UPDATE · DELETE', lessons:[
+  {id:'l24', title:'Insert, update, delete', intro:{title:'Write to the database', text:'INSERT adds rows, UPDATE changes them and DELETE removes them. Always put a WHERE on UPDATE and DELETE, or every row changes. Practice data resets after each question.', code:"UPDATE menu SET price = 45 WHERE item = 'Masala Chai';\nSELECT item, price FROM menu WHERE category = 'Tea';"}, ex:[
+   {t:'mc', q:'What happens if you run this?', code:'DELETE FROM orders;', options:['Every row in orders is deleted','Nothing, because WHERE is required','Only the first row is deleted','The whole table is dropped'], a:0, why:'With no WHERE, DELETE removes every row (the empty table stays). Always double-check!'},
+   {t:'write', q:"Add a new menu item: id 9, 'Filter Coffee', category 'Coffee', price 60.", answer:"INSERT INTO menu VALUES (9, 'Filter Coffee', 'Coffee', 60)", check:'SELECT * FROM menu', hint:"INSERT INTO menu VALUES (9, 'Filter Coffee', 'Coffee', 60)"},
+   {t:'fill', q:'Raise the price of every Dessert by 10.', code:"UPDATE menu ___ price = price + 10\nWHERE category = 'Dessert';", options:['SET','TO','VALUES'], a:0, why:'UPDATE table SET column = new value WHERE …'},
+   {t:'write', q:"Sara moved. Change her city to 'New York'.", answer:"UPDATE customers SET city = 'New York' WHERE name = 'Sara'", check:'SELECT * FROM customers', hint:"UPDATE customers SET city = … WHERE name = 'Sara'"},
+   {t:'write', q:'Remove every order with a qty of 1.', answer:'DELETE FROM orders WHERE qty = 1', check:'SELECT * FROM orders', hint:'DELETE FROM orders WHERE …'},
+  ]},
+ ]},
+ {section:'Pro', title:'Design tables', kw:'CREATE · INDEX · VIEW', lessons:[
+  {id:'l25', title:'Build your own tables', intro:{title:'Design a table', text:'CREATE TABLE lists each column and its type. A PRIMARY KEY uniquely identifies each row. REFERENCES makes a foreign key that points to a row in another table.', code:"CREATE TABLE reviews (\n  id INTEGER PRIMARY KEY,\n  item_id INTEGER REFERENCES menu(id),\n  stars INTEGER CHECK (stars BETWEEN 1 AND 5)\n);\nINSERT INTO reviews VALUES (1, 4, 5);\nSELECT * FROM reviews;"}, ex:[
+   {t:'mc', q:'What is a PRIMARY KEY for?', options:['Uniquely identifying each row','Making the app load faster','Sorting rows alphabetically','Encrypting the table'], a:0, why:'No two rows can share a primary key, so it pins down exactly one row.'},
+   {t:'mc', q:'orders.customer_id points to customers.id. What is orders.customer_id?', options:['A foreign key','A primary key','An index','A view'], a:0, tables:['orders','customers'], why:'A foreign key links a row to a row in another table.'},
+   {t:'fill', q:'Make sure label can never be left empty.', code:'CREATE TABLE seats (\n  id INTEGER PRIMARY KEY,\n  label TEXT ___ NULL\n);', options:['NOT','NO','NEVER'], a:0, why:'NOT NULL makes the database reject rows without a value.'},
+   {t:'write', q:"Create a table suppliers with id (INTEGER PRIMARY KEY) and name (TEXT), then add supplier 1, 'Chai Co'.", answer:"CREATE TABLE suppliers (id INTEGER PRIMARY KEY, name TEXT); INSERT INTO suppliers VALUES (1, 'Chai Co')", check:'SELECT * FROM suppliers', hint:"CREATE TABLE suppliers (id INTEGER PRIMARY KEY, name TEXT); then INSERT INTO suppliers VALUES (…)"},
+  ]},
+  {id:'l26', title:'Indexes & views', intro:{title:'Speed and shortcuts', text:'An INDEX helps the database find rows fast, like the index at the back of a book. A VIEW saves a query under a name, so you can SELECT from it like a table.', code:"CREATE VIEW big_orders AS\n  SELECT * FROM orders WHERE qty >= 2;\nSELECT * FROM big_orders;"}, ex:[
+   {t:'mc', q:'What does an index make faster?', options:['Finding rows with WHERE and JOIN','Inserting lots of rows','Deleting the whole table','Typing queries'], a:0, why:'Lookups get faster, but every INSERT and UPDATE must also update the index, so do not index everything.'},
+   {t:'fill', q:'Speed up searches by city.', code:'CREATE ___ idx_city ON customers(city);', options:['INDEX','VIEW','KEY'], a:0, why:'CREATE INDEX name ON table(column).'},
+   {t:'mc', q:'Does a view keep its own copy of the data?', options:['No, it runs its query again each time','Yes, a full copy','Only the first 10 rows','Only the column names'], a:0, why:'A view is a saved query. It always shows the current data.'},
+   {t:'write', q:'Create a view tea_menu showing only Tea items, then select everything from it.', answer:"CREATE VIEW tea_menu AS SELECT * FROM menu WHERE category = 'Tea'; SELECT * FROM tea_menu", hint:"CREATE VIEW tea_menu AS SELECT … ; SELECT * FROM tea_menu"},
+  ]},
+ ]},
+ {section:'Pro', title:'Final exam', kw:'Everything', lessons:[
+  {id:'l27', title:'SQL master challenge', intro:{title:'The final challenge', text:'Joins, grouping, windows and subqueries all at once. Use the table data and take your time. Finish this and you can call yourself fluent in SQL.', code:"SELECT customers.name,\n  SUM(menu.price * orders.qty) AS spent\nFROM orders\nJOIN customers ON orders.customer_id = customers.id\nJOIN menu ON orders.item_id = menu.id\nGROUP BY customers.id\nORDER BY spent DESC LIMIT 3;"}, ex:[
+   {t:'mc', q:'Which query finds the second most expensive item?', options:['SELECT item FROM menu ORDER BY price DESC LIMIT 1 OFFSET 1;','SELECT item FROM menu ORDER BY price LIMIT 2;','SELECT MAX(price) - 1 FROM menu;','SELECT item FROM menu WHERE price = 2;'], a:0, mono:true, why:'OFFSET 1 skips the top row, so LIMIT 1 then takes the second one.'},
+   {t:'write', q:'Show the name of the customer who spent the most money in total (price × qty).', answer:'SELECT customers.name FROM orders JOIN customers ON orders.customer_id = customers.id JOIN menu ON orders.item_id = menu.id GROUP BY customers.id ORDER BY SUM(menu.price * orders.qty) DESC LIMIT 1', hint:'Join all three tables, GROUP BY customer, ORDER BY SUM(price * qty) DESC LIMIT 1.'},
+   {t:'write', q:'For each city, show the number of customers and the number of orders they placed. Keep cities with 0 orders.', answer:'SELECT customers.city, COUNT(DISTINCT customers.id), COUNT(orders.id) FROM customers LEFT JOIN orders ON orders.customer_id = customers.id GROUP BY customers.city', hint:'LEFT JOIN orders, GROUP BY city, then COUNT(DISTINCT customers.id) and COUNT(orders.id).'},
+   {t:'write', q:"Show each category's revenue and its share of all revenue as a percentage rounded to 1 decimal.", answer:'SELECT menu.category, SUM(menu.price * orders.qty), ROUND(100.0 * SUM(menu.price * orders.qty) / SUM(SUM(menu.price * orders.qty)) OVER (), 1) FROM orders JOIN menu ON orders.item_id = menu.id GROUP BY menu.category', hint:'SUM(SUM(price * qty)) OVER () gives the grand total next to each group. Multiply by 100.0 so you do not get integer division.'},
+  ]},
+ ]},
+);
+</script>
+<script>
+window.__startApp=function(){
+const $ = (s,el=document)=>el.querySelector(s);
+const app = $('#app');
+const ALL = UNITS.flatMap(u=>u.lessons);
+const DAY = 864e5, HEART_MAX = 5, HEART_REFILL_MIN = 30, GOAL = 30;
+const today = ()=>new Date().toLocaleDateString('en-CA');
+
+/* ---------- saved progress (this browser only) ---------- */
+function load(){ try{ return JSON.parse(localStorage.getItem('selectstreak')||'null') }catch(e){ return null } }
+let S = Object.assign({xp:0, streak:0, last:null, done:{}, hearts:HEART_MAX, heartAt:Date.now(), todayXp:0, todayDate:today(), tab:'learn', sound:true, haptics:true, bestCombo:0, sandbox:"SELECT item, price\nFROM menu\nORDER BY price DESC;"}, load()||{});
+function save(){ const v=JSON.stringify(S); try{ localStorage.setItem('selectstreak', v) }catch(e){} try{ NATIVE&&NATIVE.Preferences&&NATIVE.Preferences.set({key:'selectstreak',value:v}) }catch(e){} }
+function tickHearts(){
+  if(S.hearts>=HEART_MAX){ S.heartAt=Date.now(); return }
+  const gained = Math.floor((Date.now()-S.heartAt)/(HEART_REFILL_MIN*6e4));
+  if(gained>0){ S.hearts=Math.min(HEART_MAX,S.hearts+gained); S.heartAt+=gained*HEART_REFILL_MIN*6e4 }
+}
+function rollDay(){
+  if(S.todayDate!==today()){ S.todayDate=today(); S.todayXp=0 }
+  if(S.last){ const gap = Math.round((new Date(today())-new Date(S.last))/DAY); if(gap>1) S.streak=0 }
+}
+tickHearts(); rollDay(); save();
+
+/* ---------- SQL engine ---------- */
+let SQL=null, engineState='loading';
+function boot(){
+  if(SQL||typeof initSqlJs!=='function') return;
+  initSqlJs().then(s=>{ SQL=s; engineState='ready'; if(S.tab==='sandbox') render() }).catch(()=>{ engineState='off' });
+}
+boot(); window.addEventListener('sqljs',boot);
+setTimeout(()=>{ if(!SQL && engineState==='loading'){ engineState='off'; if(S.tab==='sandbox') render() } },12000);
+function freshDb(){ const db=new SQL.Database(); db.run(SEED); return db }
+let sandboxDb=null;
+function run(sql, db){
+  const own=!db; db=db||freshDb();
+  try{ const r=db.exec(sql); const last=r[r.length-1]; return last?{columns:last.columns, values:last.values}:{columns:[],values:[]} }
+  catch(e){ return {error:String(e.message||e)} }
+  finally{ if(own) db.close() }
+}
+function runCheck(sql,chk){
+  if(!chk) return run(sql);
+  const db=freshDb(); try{ db.exec(sql) }catch(e){ db.close(); return {error:String(e.message||e)} }
+  const r=run(chk,db); db.close(); return r;
+}
+const norm = s=>s.toLowerCase().replace(/;\s*$/,'').replace(/\s+/g,' ').replace(/\s*([,()=<>*])\s*/g,'$1').replace(/"/g,"'").trim();
+function sameResult(u,e,ordered){
+  if(u.error) return {ok:false, msg:u.error};
+  if(u.columns.length!==e.columns.length) return {ok:false, msg:`Your result has ${u.columns.length} column${u.columns.length===1?'':'s'}; the answer has ${e.columns.length}.`};
+  const key=r=>JSON.stringify(r);
+  const cmp=(a,b)=>{ let A=a.map(key), B=b.map(key); if(!ordered){A.sort();B.sort()} return A.length===B.length && A.every((x,i)=>x===B[i]) };
+  if(cmp(u.values,e.values)) return {ok:true};
+  const lc=u.columns.map(c=>c.toLowerCase().split('.').pop());
+  const idx=e.columns.map(c=>lc.indexOf(c.toLowerCase().split('.').pop()));
+  if(idx.every(i=>i>=0) && new Set(idx).size===idx.length && cmp(u.values.map(r=>idx.map(i=>r[i])),e.values)) return {ok:true};
+  if(u.values.length!==e.values.length) return {ok:false, msg:`Your query returned ${u.values.length} row${u.values.length===1?'':'s'}; the answer returns ${e.values.length}.`};
+  return {ok:false, msg: ordered?'Close. Check the values and the sort order.':'Close. The rows have different values.'};
+}
+
+/* ---------- helpers ---------- */
+const esc = s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const KW = /\b(SELECT|DISTINCT|FROM|WHERE|AND|OR|NOT|LIKE|BETWEEN|IN|IS|NULL|EXISTS|ORDER BY|GROUP BY|PARTITION BY|HAVING|LIMIT|OFFSET|DESC|ASC|LEFT JOIN|JOIN|ON|AS|CASE|WHEN|THEN|ELSE|END|UNION ALL|UNION|INTERSECT|EXCEPT|WITH RECURSIVE|WITH|OVER|INSERT INTO|VALUES|UPDATE|SET|DELETE FROM|DELETE|CREATE TABLE|CREATE INDEX|CREATE VIEW|PRIMARY KEY|REFERENCES|CHECK|INTEGER|TEXT)\b/g;
+const FN = /\b(COUNT|SUM|AVG|MIN|MAX|UPPER|LOWER|LENGTH|ROUND|COALESCE|RANK|DENSE_RANK|ROW_NUMBER|LAG|LEAD)\b/g;
+function hl(code, filled){
+  return esc(code).split(/('(?:[^']*)')/).map((part,i)=> i%2? `<span class="s">${part}</span>` :
+    part.replace(/\b(\d+)\b/g,'<span class="n">$1</span>').replace(KW,'<span class="k">$1</span>').replace(FN,'<span class="fn">$1</span>')
+      .replace(/___/g, filled!=null?`<span class="blank filled">${esc(filled)}</span>`:'<span class="blank">?</span>')).join('');
+}
+const codeCard=(code,note,filled,id)=>`<pre class="code"${id?` id="${id}"`:''}><span class="cm">-- ${note}</span>${hl(code,filled)}</pre>`;
+function table(r, max=50){
+  if(!r||r.error) return '';
+  if(!r.columns.length) return '<div class="result"><div class="meta">No rows returned.</div></div>';
+  const rows=r.values.slice(0,max).map(v=>'<tr>'+v.map(x=>`<td>${x===null?'<i>NULL</i>':esc(typeof x==='number'&&!Number.isInteger(x)?x.toFixed(2):x)}</td>`).join('')+'</tr>').join('');
+  return `<div class="result"><table><thead><tr>${r.columns.map(c=>`<th>${esc(c)}</th>`).join('')}</tr></thead><tbody>${rows}</tbody></table><div class="meta">${r.values.length} row${r.values.length===1?'':'s'}</div></div>`;
+}
+const ICON = {
+  flame:'<svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2c1 4 5 5.5 5 11a5 5 0 0 1-10 0c0-2.5 1.2-4 2.5-5 .1 1.7.8 2.8 2 3.3C11 8.5 11 5 12 2z"/></svg>',
+  heart:'<svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 21s-7.5-4.6-9.5-9.3C1 8 3.4 4.5 7 4.5c2 0 3.5 1.1 5 3 1.5-1.9 3-3 5-3 3.6 0 6 3.5 4.5 7.2C19.5 16.4 12 21 12 21z"/></svg>',
+  bolt:'<svg viewBox="0 0 24 24" fill="currentColor"><path d="M13 2 4 14h7l-1 8 9-12h-7z"/></svg>',
+  play:'<svg viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>',
+  check:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>',
+  lock:'<svg viewBox="0 0 24 24" fill="currentColor"><path d="M7 10V7a5 5 0 0 1 10 0v3h1a1 1 0 0 1 1 1v9a1 1 0 0 1-1 1H6a1 1 0 0 1-1-1v-9a1 1 0 0 1 1-1zm2 0h6V7a3 3 0 0 0-6 0z"/></svg>',
+  x:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M6 6l12 12M18 6 6 18"/></svg>',
+  okc:'<svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="m8.5 12.5 2.5 2.5 4.5-5"/></svg>',
+  badc:'<svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><path d="m15 9-6 6M9 9l6 6"/></svg>',
+  home:'<svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 3 2.5 11h2.5v9a1 1 0 0 0 1 1h4.5v-6h3v6H18a1 1 0 0 0 1-1v-9h2.5z"/></svg>',
+  term:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><rect x="2.5" y="4" width="19" height="16" rx="3"/><path d="m7 10 3 2.5L7 15M12.5 15H17"/></svg>',
+  table:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linejoin="round"><rect x="3" y="4" width="18" height="16" rx="2.5"/><path d="M3 9.5h18M3 14.5h18M10 9.5V20"/></svg>',
+  star:'<svg viewBox="0 0 24 24" fill="currentColor"><path d="m12 2.5 2.9 6 6.6.9-4.8 4.6 1.2 6.5L12 17.4l-5.9 3.1 1.2-6.5-4.8-4.6 6.6-.9z"/></svg>',
+};
+/* ---------- sound effects (synthesised, no files) ---------- */
+let AC=null;
+function ac(){ try{ if(!AC){ const C=window.AudioContext||window.webkitAudioContext; if(!C) return null; AC=new C() } if(AC.state==='suspended') AC.resume(); return AC }catch(e){ return null } }
+function tone(f,start,dur,o={}){
+  const a=ac(); if(!a) return; const t=a.currentTime+start, osc=a.createOscillator(), g=a.createGain();
+  osc.type=o.type||'sine'; osc.frequency.setValueAtTime(f,t); if(o.to) osc.frequency.exponentialRampToValueAtTime(o.to,t+dur);
+  g.gain.setValueAtTime(0.0001,t); g.gain.exponentialRampToValueAtTime(o.vol||.15,t+.012); g.gain.exponentialRampToValueAtTime(0.0001,t+dur);
+  osc.connect(g).connect(a.destination); osc.start(t); osc.stop(t+dur+.03);
+}
+const SFX={
+  tap:   ()=>tone(900,0,.05,{type:'triangle',vol:.05}),
+  select:()=>tone(620,0,.08,{type:'triangle',vol:.1,to:840}),
+  correct:()=>{ tone(784,0,.12,{type:'triangle',vol:.16}); tone(1175,.1,.3,{type:'triangle',vol:.16}) },
+  wrong: ()=>{ tone(220,0,.16,{type:'square',vol:.05,to:185}); tone(165,.15,.28,{type:'square',vol:.05,to:125}) },
+  combo: ()=>[1047,1319,1568,2093].forEach((f,i)=>tone(f,i*.06,.15,{vol:.09})),
+  complete:()=>{ [523,659,784,1047].forEach((f,i)=>tone(f,i*.11,.22,{type:'triangle',vol:.15})); [523,659,784,1047].forEach(f=>tone(f,.5,.8,{vol:.06})) },
+  deny:  ()=>tone(170,0,.12,{type:'square',vol:.045}),
+  heart: ()=>tone(700,0,.35,{vol:.12,to:220}),
+  toggle:()=>tone(1100,0,.04,{type:'triangle',vol:.07}),
+  run:   ()=>{ tone(500,0,.06,{type:'triangle',vol:.08}); tone(750,.05,.08,{type:'triangle',vol:.08}) },
+};
+/* ---------- haptics: Android vibrates; iOS 18+ gets a tap from a native switch ---------- */
+const HAPT={tap:8,select:12,correct:[18,60,28],wrong:[70,50,70],combo:[15,40,15,40,15],complete:[30,60,30,60,90],deny:40,heart:60,toggle:10,run:12};
+let iosSw=null;
+const NH={tap:['impact','LIGHT'],select:['impact','LIGHT'],toggle:['selection'],run:['impact','MEDIUM'],correct:['notification','SUCCESS'],
+  wrong:['notification','ERROR'],deny:['notification','WARNING'],heart:['impact','HEAVY'],combo:['combo'],complete:['complete']};
+function nativeHaptic(n){
+  const H=NATIVE&&NATIVE.Haptics; if(!H) return false; const m=NH[n]; if(!m) return true;
+  try{
+    if(m[0]==='impact') H.impact({style:m[1]});
+    else if(m[0]==='notification') H.notification({type:m[1]});
+    else if(m[0]==='selection'){ H.selectionStart(); H.selectionChanged(); H.selectionEnd() }
+    else if(m[0]==='combo') [0,90,180].forEach(t=>setTimeout(()=>H.impact({style:'MEDIUM'}),t));
+    else if(m[0]==='complete'){ H.notification({type:'SUCCESS'}); setTimeout(()=>H.impact({style:'HEAVY'}),380); setTimeout(()=>H.impact({style:'MEDIUM'}),560) }
+  }catch(e){}
+  return true;
+}
+function haptic(n){
+  if(!S.haptics) return; if(nativeHaptic(n)) return; const p=HAPT[n]; if(p==null) return;
+  try{ if(navigator.vibrate && navigator.vibrate(p)) return }catch(e){}
+  try{
+    if(!iosSw){ iosSw=document.createElement('label'); iosSw.setAttribute('aria-hidden','true'); iosSw.style.cssText='position:fixed;left:-9999px;top:0;opacity:0';
+      iosSw.innerHTML='<input type="checkbox" switch tabindex="-1">'; document.body.appendChild(iosSw) }
+    const k=Array.isArray(p)?Math.ceil(p.length/2):1; for(let i=0;i<k;i++) setTimeout(()=>iosSw.click(),i*90);
+  }catch(e){}
+}
+function fx(n){ if(S.sound){ try{ SFX[n]&&SFX[n]() }catch(e){} } haptic(n) }
+function confetti(){
+  if(matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+  const c=document.createElement('canvas'); c.className='confetti'; document.body.appendChild(c);
+  const d=devicePixelRatio||1, W=c.width=innerWidth*d, H=c.height=innerHeight*d, x=c.getContext('2d');
+  const cols=['#58CC02','#1CB0F6','#FFC800','#FF9600','#FF4B4B','#CE82FF'];
+  const ps=Array.from({length:130},()=>({x:W/2,y:H*.32,vx:(Math.random()-.5)*16*d,vy:(-Math.random()*15-5)*d,r:(4+Math.random()*5)*d,c:cols[Math.random()*6|0],a:Math.random()*6,va:(Math.random()-.5)*.35}));
+  let t=0; (function f(){ x.clearRect(0,0,W,H);
+    for(const p of ps){ p.vy+=.38*d; p.x+=p.vx; p.y+=p.vy; p.vx*=.985; p.a+=p.va; x.save(); x.translate(p.x,p.y); x.rotate(p.a); x.fillStyle=p.c; x.fillRect(-p.r,-p.r/2,p.r*2,p.r); x.restore() }
+    if(++t<170) requestAnimationFrame(f); else c.remove() })();
+}
+
+/* ---------- Byte, the mascot ---------- */
+function byteSvg(mood='happy'){
+  const eyes = mood==='judgey'
+    ? '<path d="M60 95Q75 85 90 95" stroke="#131F24" stroke-width="6" stroke-linecap="round" fill="none"/><path d="M110 95Q125 85 140 95" stroke="#131F24" stroke-width="6" stroke-linecap="round" fill="none"/>'
+    : mood==='cheer'
+    ? '<path d="M62 98Q75 82 88 98" stroke="#131F24" stroke-width="6" stroke-linecap="round" fill="none"/><path d="M112 98Q125 82 138 98" stroke="#131F24" stroke-width="6" stroke-linecap="round" fill="none"/>'
+    : '<circle cx="75" cy="95" r="14" fill="#fff"/><circle cx="125" cy="95" r="14" fill="#fff"/><circle cx="77" cy="95" r="8" fill="#131F24"/><circle cx="127" cy="95" r="8" fill="#131F24"/><circle cx="74" cy="92" r="3" fill="#fff"/><circle cx="124" cy="92" r="3" fill="#fff"/>';
+  return `<svg class="byte" viewBox="0 0 200 200" fill="none" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Byte the cat">
+  <path d="M40 90C40 60 60 45 100 45C140 45 160 60 160 90V150C160 170 140 180 100 180C60 180 40 170 40 150V90Z" fill="#FF9600"/>
+  <path d="M40 150C40 170 60 180 100 180C140 180 160 170 160 150V155C160 175 140 185 100 185C60 185 40 175 40 155V150Z" fill="#D7A700"/>
+  <path d="M45 55L20 15L70 40L45 55Z" fill="#FF9600"/><path d="M42 48L28 22L60 38L42 48Z" fill="#FFC800"/>
+  <path d="M155 55L180 15L130 40L155 55Z" fill="#FF9600"/><path d="M158 48L172 22L140 38L158 48Z" fill="#FFC800"/>
+  <ellipse cx="100" cy="135" rx="40" ry="30" fill="#FFC800"/>
+  <path d="M30 105L10 100M35 115L15 110" stroke="#D7A700" stroke-width="4" stroke-linecap="round"/>
+  <path d="M170 105L190 100M165 115L185 110" stroke="#D7A700" stroke-width="4" stroke-linecap="round"/>
+  ${eyes}
+  <polygon points="96,108 104,108 100,113" fill="#FF4B4B"/>
+  <path d="M92 116Q100 122 100 116Q100 122 108 116" stroke="#131F24" stroke-width="3" stroke-linecap="round" fill="none"/>
+  <rect x="55" y="148" width="90" height="10" rx="5" fill="#CE82FF"/>
+  <circle cx="100" cy="160" r="7" fill="#58CC02"/><circle cx="100" cy="160" r="3" fill="#fff"/>
+  <rect x="70" y="130" width="60" height="35" rx="6" fill="#202F36" stroke="#37464F" stroke-width="3"/>
+  <text x="78" y="152" fill="#58CC02" font-size="14" font-family="'Fira Code',monospace" font-weight="bold">${mood==='judgey'?'&gt;!':'&gt;_'}</text>
+  <ellipse cx="65" cy="145" rx="8" ry="10" fill="#FF9600"/><ellipse cx="135" cy="145" rx="8" ry="10" fill="#FF9600"/>
+</svg>`;
+}
+const byteWrap=(mood,cls='byte-wrap')=>`<div class="${cls}">${byteSvg(mood)}</div>`;
+function toast(msg){ const t=document.createElement('div'); t.className='toast'; t.textContent=msg; document.body.appendChild(t); setTimeout(()=>t.remove(),2400) }
+function unlocked(id){ const i=ALL.findIndex(l=>l.id===id); return i===0 || !!S.done[ALL[i-1].id] }
+function current(){ const l=ALL.find(l=>!S.done[l.id]); return l&&l.id }
+
+/* ---------- home ---------- */
+function statBar(){
+  tickHearts();
+  return `<header class="bar"><div class="wrap">
+    <span class="flag" title="Course: SQL">SQL</span>
+    <span class="stat streak" title="Day streak">${ICON.flame}${S.streak}</span>
+    <span class="stat xp" title="Total XP">${ICON.bolt}${S.xp}</span>
+    <span class="stat hearts" title="Hearts">${ICON.heart}${S.hearts}</span>
+  </div></header>`;
+}
+function navBar(){
+  const b=(id,icon,label)=>`<button class="nb" role="tab" data-tab="${id}" aria-selected="${S.tab===id}">${icon}<span>${label}</span></button>`;
+  return `<nav class="nav" role="tablist">
+    ${b('learn',ICON.home,'Learn')}${b('sandbox',ICON.term,'Practice')}${b('profile',byteWrap('happy'),'Profile')}</nav>`;
+}
+function ring(p){
+  const r=22,c=2*Math.PI*r;
+  return `<svg class="ring" width="56" height="56" viewBox="0 0 56 56"><circle cx="28" cy="28" r="${r}" fill="none" style="stroke:var(--border-subtle)" stroke-width="7"/><circle cx="28" cy="28" r="${r}" fill="none" style="stroke:var(--color-brand-orange)" stroke-width="7" stroke-linecap="round" stroke-dasharray="${c}" stroke-dashoffset="${c*(1-Math.min(1,p))}" transform="rotate(-90 28 28)"/></svg>`;
+}
+function learnView(){
+  const cur=current(); let n=0;
+  let lastSec='';
+  const units=UNITS.map((u,ui)=>{
+    const secHead = u.section!==lastSec ? `<div class="section-h"><span>${esc(u.section)}</span><small>${UNITS.filter(x=>x.section===u.section).flatMap(x=>x.lessons).filter(l=>S.done[l.id]).length}/${UNITS.filter(x=>x.section===u.section).flatMap(x=>x.lessons).length} lessons</small></div>` : ''; lastSec=u.section;
+    const uLocked=!unlocked(u.lessons[0].id);
+    const nodes=u.lessons.map(l=>{
+      const off=[0,60,0,-60][n++%4];
+      const st=S.done[l.id]?'done':unlocked(l.id)?'open':'locked';
+      return `<button class="node ${st} ${l.id===cur?'current':''}" data-lesson="${l.id}" style="transform:translateX(${off}px)" ${st==='locked'?'aria-disabled="true"':''}>
+        ${l.id===cur?'<span class="start">START</span>':''}
+        <span class="disc">${st==='done'?ICON.check:st==='locked'?ICON.lock:ICON.play}</span>
+        <span class="label">${esc(l.title)}</span></button>`;
+    }).join('');
+    return secHead+`<section class="unit ${uLocked?'locked':''}"><div class="unit-head"><div><div class="eyebrow">Unit ${ui+1} · <b>${u.lessons.filter(l=>S.done[l.id]).length}/${u.lessons.length} done</b></div><h2>${esc(u.title)}</h2></div><span class="kw">${esc(u.kw)}</span></div><div class="path">${nodes}</div></section>`;
+  }).join('');
+  const doneCount=Object.keys(S.done).length;
+  const msg = S.todayXp>=GOAL ? 'Byte is proud of you. Daily goal reached and your streak is safe.' : `Byte says: earn ${GOAL-S.todayXp} more XP today to hit your goal${S.streak?` and keep your ${S.streak}-day streak`:''}.`;
+  return `<main class="wrap">
+    <div class="goal">${byteWrap(S.todayXp>=GOAL?"cheer":"happy")}<div class="txt"><b>Daily goal · ${Math.min(S.todayXp,GOAL)}/${GOAL} XP</b><div class="prog goalbar"><i style="width:${Math.min(100,S.todayXp/GOAL*100)}%;background:var(--color-brand-orange);box-shadow:none"></i></div><p>${msg}</p></div></div>
+    ${units}
+    <p class="foot-note">${doneCount}/${ALL.length} lessons complete · practice data: a small café with menu, customers, orders and staff.<br>Progress is saved on this device.</p>
+  </main>`;
+}
+
+/* ---------- sandbox ---------- */
+let sbxResult=null;
+function sandboxView(){
+  const chips=['SELECT * FROM menu;','SELECT * FROM customers;','SELECT * FROM orders;','SELECT * FROM staff;','SELECT category, AVG(price) FROM menu GROUP BY category;'];
+  return `<main class="wrap sbx">
+    <div><h2>Practice</h2><p>Try any query on the café database. Nothing here costs hearts.</p></div>
+    ${dataCard({tables:SCHEMA.map(t=>t.name), code:'select *'})}
+    <div class="row">${chips.map(c=>`<button class="chip" data-chip="${esc(c)}">${esc(c.replace(/;$/,''))}</button>`).join('')}</div>
+    <textarea id="sbx-sql" class="sql" spellcheck="false" autocapitalize="off" autocorrect="off" autocomplete="off" aria-label="SQL query">${esc(S.sandbox)}</textarea>
+    ${kbar('sbx-sql')}
+    <div class="row"><button class="btn" id="sbx-run" ${SQL?'':'disabled'}>Run query</button><button class="btn ghost" id="sbx-reset">Reset data</button>
+      <span class="engine">${SQL?(coarse?'Results show below':'Ctrl + Enter runs the query'):engineState==='loading'?'Loading the SQL engine…':'The SQL engine could not load, so the sandbox is unavailable.'}</span></div>
+    <div id="sbx-out">${sbxResult?(sbxResult.error?`<div class="err">${esc(sbxResult.error)}</div>`:table(sbxResult,200)):''}</div>
+  </main>`;
+}
+function runSandbox(){
+  if(!SQL) return; const ta=$('#sbx-sql'); S.sandbox=ta.value; save();
+  if(!sandboxDb) sandboxDb=freshDb();
+  sbxResult=run(ta.value, sandboxDb); fx(sbxResult.error?'deny':'run');
+  $('#sbx-out').innerHTML = sbxResult.error?`<div class="err">${esc(sbxResult.error)}</div>`:table(sbxResult,200);
+  const out=$('#sbx-out'); if(out.getBoundingClientRect().top>innerHeight*0.6) out.scrollIntoView({behavior:matchMedia('(prefers-reduced-motion: reduce)').matches?'auto':'smooth',block:'start'});
+}
+
+/* ---------- profile ---------- */
+let resetArmed=false;
+function profileView(){
+  const done=Object.keys(S.done).length;
+  const card=(icon,color,val,label)=>`<div class="sc"><span style="color:${color}">${icon}</span><div><b>${val}</b><small>${label}</small></div></div>`;
+  return `<main class="wrap prof">
+    <div class="prof-head">${byteWrap(done?'cheer':'happy','hero-byte')}<h2>Your progress</h2><p>Learning SQL with Byte</p></div>
+    <div class="statgrid">
+      ${card(ICON.flame,'var(--color-brand-orange)',S.streak,'Day streak')}
+      ${card(ICON.bolt,'var(--color-brand-yellow)',S.xp,'Total XP')}
+      ${card(ICON.check,'var(--color-brand-green)',`${done}/${ALL.length}`,'Lessons done')}
+      ${card(ICON.star,'var(--color-brand-purple)',S.bestCombo,'Best combo')}
+    </div>
+    <h3>Settings</h3>
+    <div class="settings">
+      <label class="set" for="set-sound"><span><b>Sound effects</b><small>Dings, buzzes and the lesson fanfare</small></span><input type="checkbox" class="sw" id="set-sound" ${S.sound?'checked':''}></label>
+      <label class="set" for="set-haptics"><span><b>Haptics</b><small>Taptic feedback on taps and answers</small></span><input type="checkbox" class="sw" id="set-haptics" ${S.haptics?'checked':''}></label>
+    </div>
+    <button class="btn danger ${resetArmed?'armed':''}" id="reset-progress">${resetArmed?'Tap again to erase all progress':'Reset progress'}</button>
+    <p class="foot-note" style="padding-block:4px 10px">Progress is saved on this device.</p>
+  </main>`;
+}
+
+/* ---------- render shell ---------- */
+function render(){
+  if(P) return;
+  if(S.tab!=='profile') resetArmed=false;
+  app.innerHTML = statBar() + (S.tab==='learn'?learnView():S.tab==='sandbox'?sandboxView():profileView()) + navBar();
+}
+app.addEventListener('click',e=>{
+  const t=e.target.closest('[data-tab]'); if(t){ if(S.tab!==t.dataset.tab) fx('tap'); S.tab=t.dataset.tab; save(); render(); scrollTo(0,0); return }
+  const n=e.target.closest('[data-lesson]');
+  if(n){ const id=n.dataset.lesson;
+    if(!unlocked(id)){ fx('deny'); return toast('Finish the lesson before this one to unlock it.') }
+    tickHearts(); if(S.hearts<=0){ fx('heart'); return outOfHearts() }
+    fx('select'); return startLesson(id) }
+  const c=e.target.closest('[data-chip]'); if(c){ $('#sbx-sql').value=c.dataset.chip; runSandbox(); return }
+  if(e.target.closest('#sbx-run')) return runSandbox();
+  if(e.target.closest('#reset-progress')){
+    if(!resetArmed){ resetArmed=true; fx('deny'); render(); return }
+    const keep={sound:S.sound,haptics:S.haptics}; resetArmed=false;
+    S=Object.assign({xp:0,streak:0,last:null,done:{},hearts:HEART_MAX,heartAt:Date.now(),todayXp:0,todayDate:today(),tab:'learn',bestCombo:0,sandbox:S.sandbox},keep);
+    save(); fx('tap'); render(); toast('Progress erased. Fresh start!'); return }
+  if(e.target.closest('#sbx-reset')){ if(sandboxDb){sandboxDb.close(); sandboxDb=null} sbxResult=null; toast('Café data reset to the original rows.'); render() }
+});
+app.addEventListener('keydown',e=>{ if(e.target.id==='sbx-sql' && e.key==='Enter' && (e.ctrlKey||e.metaKey)){ e.preventDefault(); runSandbox() } });
+app.addEventListener('change',e=>{
+  if(e.target.id==='set-sound'){ S.sound=e.target.checked; save(); fx('toggle') }
+  if(e.target.id==='set-haptics'){ S.haptics=e.target.checked; save(); fx('toggle') }
+});
+app.addEventListener('input',e=>{ if(e.target.id==='sbx-sql'){ S.sandbox=e.target.value; save() } });
+
+function outOfHearts(){
+  const mins=Math.max(1,Math.ceil((S.heartAt+HEART_REFILL_MIN*6e4-Date.now())/6e4));
+  const ov=document.createElement('div'); ov.className='player';
+  ov.innerHTML=`<div class="done-screen">${byteWrap('judgey','hero-byte')}<h2>Out of hearts</h2>
+    <p style="max-width:34ch;color:var(--text-soft)">A heart comes back every ${HEART_REFILL_MIN} minutes (next one in about ${mins} min). Or trade 20 XP for a full refill.</p>
+    <div class="row" style="justify-content:center"><button class="btn" id="refill" ${S.xp<20?'disabled':''}>Refill for 20 XP</button><button class="btn ghost" id="later">Practice instead</button></div></div>`;
+  document.body.appendChild(ov);
+  $('#refill',ov).onclick=()=>{ fx('correct'); S.xp-=20; S.hearts=HEART_MAX; S.heartAt=Date.now(); save(); ov.remove(); render(); toast('Hearts refilled.') };
+  $('#later',ov).onclick=()=>{ ov.remove(); S.tab='sandbox'; save(); render() };
+}
+
+/* ---------- lesson player ---------- */
+let P=null; // {lesson, queue, i, total, mistakes, answer, state, el}
+function startLesson(id){
+  const lesson=ALL.find(l=>l.id===id);
+  P={combo:0, lesson, queue:lesson.ex.map((x,i)=>({...x,_k:i})), i:0, total:lesson.ex.length, right:0, mistakes:0, state:'answering', answer:null, firstTry:new Set()};
+  P.el=document.createElement('div'); P.el.className='player'; document.body.appendChild(P.el);
+  document.body.style.overflow='hidden';
+  if(lesson.intro && !S.done[lesson.id]) drawIntro(); else drawEx();
+}
+function drawIntro(){
+  const it=P.lesson.intro; P.state='answering';
+  const res=SQL?run(it.code):null;
+  P.el.innerHTML=`<div class="wrap p-top"><button class="x" id="quit" aria-label="Quit lesson">${ICON.x}</button><div class="prog"><i style="width:0%"></i></div><div class="p-stats"><span class="stat streak">${ICON.flame}${S.streak}</span><span class="stat hearts">${ICON.heart}${S.hearts}</span></div></div>
+    <div class="p-body"><div class="wrap">
+      <div class="prompt"><div class="mascot" id="mascot">${byteSvg('happy')}</div><div class="bubble"><div class="kind"><span class="newpill">New</span></div><div class="q">${esc(it.title)}</div></div></div>
+      <p style="margin:0;font-size:17px;line-height:1.5">${esc(it.text)}</p>
+      <div class="intro-ex">${codeCard(it.code,'Example')}${res&&!res.error?`<span class="lbl">It returns</span>${table(res,8)}`:''}</div>
+    </div></div>
+    <div class="sheet"><div class="wrap"><button class="btn" id="go">Got it</button></div></div>`;
+  $('#quit',P.el).onclick=closeLesson;
+  $('#go',P.el).onclick=()=>{ fx('select'); drawEx() }; $('#go',P.el).focus();
+}
+function askQuit(){
+  if(!P) return; if(P.i===0 && P.state==='answering'){ closeLesson(); return }
+  fx('deny'); const q=document.createElement('div'); q.className='quit-sheet';
+  q.innerHTML=`<div class="card">${byteWrap('judgey')}<h3>Wait, don't go!</h3><p>You'll lose this lesson's progress if you quit now.</p>
+    <button class="btn" id="stay">Keep learning</button><button class="btn danger" id="leave">End lesson</button></div>`;
+  P.el.appendChild(q);
+  $('#stay',q).onclick=()=>{ fx('tap'); q.remove() }; $('#leave',q).onclick=closeLesson;
+  q.onclick=e=>{ if(e.target===q) q.remove() };
+}
+function closeLesson(){ if(!P) return; fx('tap'); P.el.remove(); P=null; document.body.style.overflow=''; render() }
+function shuffle(a,seed){ a=a.slice(); let s=seed*9301+49297; for(let i=a.length-1;i>0;i--){ s=(s*9301+49297)%233280; const j=Math.floor(s/233280*(i+1)); [a[i],a[j]]=[a[j],a[i]] } return a }
+
+/* ---------- table data for lessons ---------- */
+const TABLE_ROWS=(()=>{ const out={}, re=/INSERT INTO (\w+) VALUES([\s\S]*?);/g; let m;
+  while((m=re.exec(SEED))) out[m[1]]=[...m[2].matchAll(/\(([^()]*)\)/g)].map(t=>t[1].split(',').map(v=>{ v=v.trim(); return v==='NULL'?null:v[0]==="'"?v.slice(1,-1):Number(v) }));
+  return out })();
+const exText=(ex,withQ)=>[withQ?ex.q:'',ex.code,ex.answer,...(ex.tokens||[]),...(ex.extra||[]),...(ex.mono?ex.options:[])].filter(Boolean).join(' ').toLowerCase();
+function tablesFor(ex){ if(ex.tables) return ex.tables; const t=exText(ex,true); return SCHEMA.map(s=>s.name).filter(n=>new RegExp('\\b'+n+'\\b').test(t)) }
+function dataCard(ex){
+  const names=tablesFor(ex); if(!names.length) return '';
+  const txt=exText(ex,false);
+  const panel=(n,i)=>{ const t=SCHEMA.find(s=>s.name===n), rows=TABLE_ROWS[n]||[];
+    let hot=t.cols.map(c=>new RegExp('\\b'+c+'\\b').test(txt)); if(!hot.some(Boolean)||/select \*/.test(txt)) hot=hot.map(()=>true);
+    return `<div class="dpanel" data-panel="${n}" ${i?'hidden':''}><div class="dscroll"><table><thead><tr>${t.cols.map((c,j)=>`<th class="${hot[j]?'hot':''}">${c}</th>`).join('')}</tr></thead>
+      <tbody>${rows.map(r=>'<tr>'+r.map((v,j)=>`<td class="${hot[j]?'hot':''}">${v===null?'<i>NULL</i>':esc(v)}</td>`).join('')+'</tr>').join('')}</tbody></table></div><div class="dmeta">${n} · ${rows.length} rows</div></div>` };
+  return `<section class="data" aria-label="Table data"><div class="dhead"><span class="dlabel">${ICON.table}Table data</span>
+    <div class="dtabs">${names.map((n,i)=>`<button class="dtab" data-dtab="${n}" aria-selected="${!i}">${n}</button>`).join('')}</div></div>${names.map(panel).join('')}</section>`;
+}
+const KEYS=['SELECT','*','FROM','WHERE','=',',',"'",'(',')','AND','OR','AS','IS NULL','IN','ORDER BY','DESC','GROUP BY','HAVING','COUNT(*)','SUM(','AVG(','JOIN','LEFT JOIN','ON','LIMIT','CASE','WHEN','THEN','ELSE','END','WITH','OVER','PARTITION BY','>','<','.',';'];
+const kbar=target=>`<div class="kbar" data-kbar="${target}" aria-label="Insert SQL keywords">${KEYS.map(k=>`<button type="button" class="${/^[A-Z]/.test(k)?'':'p'}" data-key="${esc(k)}">${esc(k)}</button>`).join('')}</div>`;
+function insertKey(ta,k){
+  const a=ta.selectionStart, b=ta.selectionEnd, before=ta.value.slice(0,a);
+  const tight=/^[,;).]$/.test(k)||k.endsWith('('), lead=(!before||/[\s(.]$/.test(before)||/^[,;).]$/.test(k))?'':' ';
+  const ins=lead+k+(tight&&k!==','?'':' ');
+  if(k==="'"){ ta.setRangeText(lead+"''",a,b,'end'); ta.selectionStart=ta.selectionEnd=ta.selectionEnd-1 }
+  else ta.setRangeText(ins,a,b,'end');
+  ta.dispatchEvent(new Event('input',{bubbles:true}));
+}
+document.addEventListener('pointerdown',e=>{ if(e.target.closest('[data-key]')) e.preventDefault() });
+document.addEventListener('click',e=>{
+  const k=e.target.closest('[data-key]');
+  if(k){ const ta=document.getElementById(k.parentElement.dataset.kbar); if(ta&&!ta.readOnly){ haptic('tap'); insertKey(ta,k.dataset.key); ta.focus({preventScroll:true}) } return }
+  const t=e.target.closest('[data-dtab]');
+  if(t){ const card=t.closest('.data'); fx('tap');
+    card.querySelectorAll('[data-dtab]').forEach(x=>x.setAttribute('aria-selected',x===t));
+    card.querySelectorAll('[data-panel]').forEach(p=>p.hidden=p.dataset.panel!==t.dataset.dtab) }
+});
+const coarse=matchMedia('(pointer:coarse)').matches;
+function optOrder(ex){ if(!ex._ord) ex._ord=shuffle(ex.options.map((_,i)=>i), Date.now()%997+ex.options.length); return ex._ord }
+const KIND={mc:'Choose the answer', fill:'Fill in the blank', arrange:'Build the query', write:'Write the query'};
+function drawEx(){
+  const ex=P.queue[P.i]; P.state='answering'; P.answer=null; P.ex=ex;
+  const pct=P.right/P.total*100;
+  let body='';
+  if(ex.t==='mc'){
+    const short=ex.options.every(o=>o.length<=12);
+    body=`${ex.code?codeCard(ex.code,'Read the query'):''}<div class="opts ${short?'grid2':''}">${optOrder(ex).map((i,pos)=>{ const o=ex.options[i]; return `<button class="opt ${ex.mono?'mono':''}" data-opt="${i}"><span class="n">${pos+1}</span><span>${esc(o)}</span></button>` }).join('')}</div>`;
+  } else if(ex.t==='fill'){
+    body=`${codeCard(ex.code,'Complete the query',null,'fillcode')}<div class="opts grid2">${optOrder(ex).map((i,pos)=>{ const o=ex.options[i]; return `<button class="opt mono" data-opt="${i}"><span class="n">${pos+1}</span><span>${esc(o)}</span></button>` }).join('')}</div>`;
+  } else if(ex.t==='arrange'){
+    P.picked=[]; P.bank=shuffle(ex.tokens.concat(ex.extra||[]), P.i+ex._k+ex.tokens.length);
+    body=`<div class="ans-line" id="line" aria-label="Your query"></div><div class="bank" id="bank">${P.bank.map((t,i)=>`<button class="tok ${/^[A-Z][A-Z ]+$/.test(t)?'kwt':''}" data-tok="${i}">${esc(t)}</button>`).join('')}</div>`;
+  } else if(ex.t==='write'){
+    body=`<textarea id="w" class="sql" spellcheck="false" autocapitalize="off" autocorrect="off" autocomplete="off" placeholder="SELECT …" aria-label="Your SQL query"></textarea>${kbar('w')}
+      ${ex.hint?`<details class="peek"><summary>Need a hint?</summary><span class="hint mono">${esc(ex.hint)}</span></details>`:''}
+      ${SQL?'':`<span class="engine">${engineState==='loading'?'Loading the SQL engine… your answer will be checked by text until it is ready.':'Checking by text match, because the SQL engine could not load.'}</span>`}`;
+  }
+  P.el.innerHTML=`<div class="wrap p-top"><button class="x" id="quit" aria-label="Quit lesson">${ICON.x}</button><div class="prog"><i style="width:${pct}%"></i></div><div class="p-stats"><span class="stat streak" title="Day streak">${ICON.flame}${S.streak}</span><span class="stat hearts" title="Hearts">${ICON.heart}${S.hearts}</span></div></div>
+    <div class="p-body"><div class="wrap">
+      <div class="prompt"><div class="mascot" id="mascot">${byteSvg("happy")}</div><div class="bubble"><div class="kind">${KIND[ex.t]}</div><div class="q">${esc(ex.q)}</div></div></div>
+      ${dataCard(ex)}${body}</div></div>
+    <div class="sheet" id="sheet"><div class="wrap"><div class="fb" id="fb" hidden></div><button class="btn" id="go" disabled>Check</button></div></div>`;
+  bindEx();
+}
+function setReady(v){ $('#go',P.el).disabled=!v }
+function bindEx(){
+  const el=P.el, ex=P.ex;
+  $('#quit',el).onclick=askQuit;
+
+  el.querySelectorAll('[data-opt]').forEach(b=>b.onclick=()=>{
+    if(P.state!=='answering') return;
+    fx('select'); el.querySelectorAll('[data-opt]').forEach(x=>x.classList.remove('sel')); b.classList.add('sel'); P.answer=+b.dataset.opt; setReady(true);
+    if(ex.t==='fill') $('#fillcode',el).outerHTML=codeCard(ex.code,'Complete the query',ex.options[P.answer],'fillcode');
+  });
+  if(ex.t==='arrange'){
+    const line=$('#line',el), bank=$('#bank',el);
+    const draw=()=>{ line.innerHTML=P.picked.map((bi,pi)=>`<button class="tok ${/^[A-Z][A-Z ]+$/.test(P.bank[bi])?'kwt':''}" data-pi="${pi}">${esc(P.bank[bi])}</button>`).join('');
+      bank.querySelectorAll('[data-tok]').forEach(b=>b.classList.toggle('used',P.picked.includes(+b.dataset.tok))); setReady(P.picked.length>0) };
+    bank.onclick=e=>{ const b=e.target.closest('[data-tok]'); if(!b||P.state!=='answering'||P.picked.includes(+b.dataset.tok)) return; fx('select'); P.picked.push(+b.dataset.tok); draw() };
+    line.onclick=e=>{ const b=e.target.closest('[data-pi]'); if(!b||P.state!=='answering') return; fx('tap'); P.picked.splice(+b.dataset.pi,1); draw() };
+  }
+  if(ex.t==='write'){ const w=$('#w',el); if(!coarse) w.focus(); w.oninput=()=>setReady(w.value.trim().length>0);
+    w.onkeydown=e=>{ if(e.key==='Enter'&&(e.ctrlKey||e.metaKey)){ e.preventDefault(); $('#go',el).click() } } }
+  $('#go',el).onclick=()=>{ if(P.state==='answering') check(); else { haptic('tap'); next() } };
+}
+function check(){
+  const ex=P.ex; let ok=false, msg='', show=null, correct='';
+  if(ex.t==='mc'||ex.t==='fill'){ ok=P.answer===ex.a; correct=ex.options[ex.a]; msg=ex.why||'' }
+  else {
+    const sql = ex.t==='arrange' ? P.picked.map(i=>P.bank[i]).join(' ') : $('#w',P.el).value;
+    correct=ex.answer;
+    if(SQL){ const exp=runCheck(ex.answer,ex.check), got=runCheck(sql,ex.check); const r=sameResult(got,exp,ex.ordered); ok=r.ok; msg=ok?(ex.why||'Your query returns the right rows.'):r.msg; show=ok?got:exp }
+    else { ok=norm(sql)===norm(ex.answer); msg=ok?(ex.why||''):(ex.why||'Compare your query with the answer below.') }
+  }
+  P.state='checked';
+  P.combo = ok ? P.combo+1 : 0; if(P.combo>S.bestCombo){ S.bestCombo=P.combo; save() }
+  fx(ok?'correct':'wrong'); if(ok && P.combo>=3) setTimeout(()=>fx('combo'),260);
+  if(ok){ P.right++; if(!P.firstTry.has(ex._k)) P.firstTry.add(ex._k) }
+  else { P.mistakes++; P.firstTry.add(ex._k); S.hearts=Math.max(0,S.hearts-1); if(S.hearts<HEART_MAX && S.hearts===HEART_MAX-1) S.heartAt=Date.now(); save(); P.queue.push(ex) }
+  const sheet=$('#sheet',P.el), fb=$('#fb',P.el), go=$('#go',P.el);
+  sheet.className='sheet '+(ok?'good':'wrong');
+  const m=$('#mascot',P.el); m.innerHTML=byteSvg(ok?'cheer':'judgey'); m.className='mascot '+(ok?'hop':'shake');
+  fb.hidden=false;
+  fb.innerHTML=`${ok?ICON.okc:ICON.badc}<div class="fb-body"><h4>${ok?(['Excellent!','Nice work!','Great job!','You got it!'][P.right%4]):'Not quite right'}${ok&&P.combo>=3?`<span class="combo">${P.combo} in a row</span>`:''}</h4>${msg?`<p>${esc(msg)}</p>`:''}
+    ${!ok?`<div class="correct"><b>Correct answer:</b> ${esc(correct)}</div>`:''}${show?`${ok?'':'<p style="margin-top:8px"><b>It returns:</b></p>'}${table(show,8)}`:''}</div>`;
+  go.disabled=false; go.textContent='Continue'; go.className='btn '+(ok?'ok':'bad'); go.focus();
+  P.el.querySelectorAll('.opt').forEach(b=>b.disabled=true);
+  const w=$('#w',P.el); if(w) w.readOnly=true;
+  $('.prog i',P.el).style.width=(P.right/P.total*100)+'%';
+  const hs=$('.p-top .hearts',P.el); hs.innerHTML=ICON.heart+S.hearts; if(!ok){ hs.classList.remove('lose'); void hs.offsetWidth; hs.classList.add('lose') }
+  if(!ok && S.hearts<=0){ go.textContent='Out of hearts'; go.onclick=()=>{ closeLesson(); outOfHearts() } }
+}
+function next(){ P.i++; if(P.i<P.queue.length) drawEx(); else finish() }
+function finish(){
+  const perfect=P.mistakes===0, gain=10+(perfect?5:0), first=!S.done[P.lesson.id];
+  S.xp+=gain; S.todayXp+=gain; S.done[P.lesson.id]=true;
+  if(S.last!==today()){ const gap=S.last?Math.round((new Date(today())-new Date(S.last))/DAY):99; S.streak=gap===1?S.streak+1:1; S.last=today() }
+  save();
+  const acc=Math.round(P.total/(P.total+P.mistakes)*100);
+  P.el.innerHTML=`<div class="done-screen">
+    ${byteWrap('cheer','hero-byte')}
+    <h2>${perfect?'Perfect lesson!':'Lesson complete!'}</h2>
+    <p style="margin:0;color:var(--text-soft);max-width:36ch">${esc(P.lesson.title)} ${first?'is done and the next lesson is unlocked.':'reviewed.'}</p>
+    <div class="tiles">
+      <div class="tile" style="border-color:var(--color-brand-yellow)"><div class="h" style="background:var(--color-brand-yellow)">XP earned</div><div class="v" style="color:var(--color-brand-yellow)">+${gain}</div></div>
+      <div class="tile" style="border-color:var(--color-brand-green)"><div class="h" style="background:var(--color-brand-green)">Accuracy</div><div class="v" style="color:var(--color-brand-green)">${acc}%</div></div>
+      <div class="tile" style="border-color:var(--color-brand-orange)"><div class="h" style="background:var(--color-brand-orange)">Streak</div><div class="v" style="color:var(--color-brand-orange)">${S.streak} day${S.streak===1?'':'s'}</div></div>
+    </div>
+    <button class="btn" id="cont" style="min-width:220px">Continue</button></div>`;
+  $('#cont',P.el).onclick=closeLesson; $('#cont',P.el).focus();
+  fx('complete'); confetti();
+  const xv=$('.tile .v',P.el); let k=0; const iv=setInterval(()=>{ k++; xv.textContent='+'+k; if(k>=gain) clearInterval(iv) },40); xv.textContent='+0';
+}
+document.addEventListener('keydown',e=>{
+  if(!P||e.target.tagName==='TEXTAREA') return;
+  if(e.key==='Enter'){ const go=$('#go',P.el)||$('#cont',P.el); if(go&&!go.disabled){ e.preventDefault(); go.click() } }
+  if(P.state==='answering' && /^[1-4]$/.test(e.key)){ const b=P.el.querySelectorAll('[data-opt]')[+e.key-1]; if(b) b.click() }
+});
+
+render();
+try{ if(!sessionStorage.getItem('ss-splash')){ sessionStorage.setItem('ss-splash','1');
+  const sp=document.createElement('div'); sp.className='splash'; sp.innerHTML=byteWrap('cheer','hero-byte')+'<h1>Select Streak</h1>';
+  document.body.appendChild(sp); setTimeout(()=>sp.classList.add('out'),1100); setTimeout(()=>sp.remove(),1500) } }catch(e){}
+};
+</script>
+<script>
+/* Offline support: cache the app the first time it opens. */
+if('serviceWorker' in navigator && location.protocol.startsWith('http')) navigator.serviceWorker.register('sw.js').catch(()=>{});
+</script>
+<script>
+/* Capacitor bridge. In a normal browser NATIVE is null and the app falls back to web APIs. */
+var NATIVE=(window.Capacitor&&window.Capacitor.isNativePlatform&&window.Capacitor.isNativePlatform())?window.Capacitor.Plugins:null;
+(async function(){
+  try{
+    if(NATIVE&&NATIVE.Preferences){
+      const r=await NATIVE.Preferences.get({key:'selectstreak'});
+      if(r&&r.value&&!localStorage.getItem('selectstreak')) localStorage.setItem('selectstreak',r.value);
+    }
+    if(NATIVE&&NATIVE.StatusBar) NATIVE.StatusBar.setStyle({style:'DARK'}).catch(()=>{});
+  }catch(e){}
+  window.__startApp();
+  try{ NATIVE&&NATIVE.SplashScreen&&NATIVE.SplashScreen.hide() }catch(e){}
+})();
+</script>
+</body>
+</html>
